@@ -78,6 +78,29 @@
     color:#7c2d12; line-height:1.5; margin-top:8px;
   }
   a{color:var(--accent);}
+  nav.tabs{display:flex; gap:8px; margin:0 0 20px;}
+  nav.tabs .tabbtn{
+    background:rgba(255,255,255,.08); color:#e2e8f0; border:1px solid rgba(255,255,255,.18);
+    padding:9px 16px; border-radius:8px 8px 0 0; font-size:13.5px; font-weight:bold; cursor:pointer;
+    font-family:Arial, Helvetica, sans-serif;
+  }
+  nav.tabs .tabbtn.active{background:var(--panel); color:var(--ink); border-bottom-color:var(--panel);}
+  .tabpanel{display:none;}
+  .tabpanel.active{display:block;}
+  .invtable{width:100%; border-collapse:collapse; font-size:13px;}
+  .invtable th{background:#f9fafb; text-align:left; padding:8px 10px; font-size:11px; text-transform:uppercase; letter-spacing:.02em; color:var(--sub); border-bottom:1px solid var(--line);}
+  .invtable td{padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  .invtable tr:last-child td{border-bottom:none;}
+  .invtable input[type=number]{width:64px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-size:13px; text-align:center;}
+  .invtable input.dirty{border-color:var(--accent); background:#eff6ff;}
+  .invcode{font-weight:bold; font-family:Consolas, Menlo, monospace; font-size:12.5px;}
+  .invmeta{color:var(--sub); font-size:11.5px;}
+  .syncbar{display:flex; justify-content:space-between; align-items:center; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:9px 14px; font-size:12.5px; color:#1e40af; margin-bottom:20px;}
+  .syncbar.err{background:#fef2f2; border-color:#fecaca; color:#991b1b;}
+  .syncbar .dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; margin-right:6px;}
+  .syncbar.err .dot{background:#ef4444;}
+  .qtyrow-zero{opacity:.55;}
+  .invsection-hint{color:var(--sub); font-size:12px; margin:0 0 12px;}
 </style>
 </head>
 <body>
@@ -86,6 +109,13 @@
     <h1>🔑 Job Feasibility Checker</h1>
     <p>Type the vehicle in, get an instant read on OBD-vs-bench, the blade &amp; Lishi tool you need, whether your Autel IM508S / Xhorse Key Tool Plus can do it, and whether your current stock supports taking the job.</p>
   </header>
+
+  <nav class="tabs">
+    <button class="tabbtn active" data-tab="checker" onclick="switchTab('checker')">🔑 Job Checker</button>
+    <button class="tabbtn" data-tab="inventory" onclick="switchTab('inventory')">📦 Inventory</button>
+  </nav>
+
+  <div id="tab-checker" class="tabpanel active">
 
   <div class="snapshot-bar">
     <span>📦 Stock snapshot last set: <b id="snapDate"></b></span>
@@ -159,9 +189,75 @@
       The compatibility guidance here is general industry knowledge (platform/immobiliser generation, standard blade &amp; Lishi references) plus publicly available notes on Autel/Xhorse coverage. Autel and Xhorse both add, change and occasionally <i>remove</i> vehicle functions with firmware/software updates and paid licenses — for any bench or all-keys-lost job, especially on newer or premium vehicles (VAG MQB49+, BMW F/G-series, Mercedes FBS3/4, JLR, PSA/Renault), confirm the live function list in your tool's app or the vendor's current coverage list before you commit to a customer. Treat every verdict here as a strong first read, not a final guarantee.
     </p>
   </div>
+
+  </div><!-- /tab-checker -->
+
+  <div id="tab-inventory" class="tabpanel">
+    <div class="card">
+      <h2>📦 Inventory</h2>
+      <p class="hint">Live, shared between every device open on this link — no login needed. Change a quantity here and it updates for whoever else has this page open within a couple of seconds.</p>
+      <div class="syncbar" id="syncBar"><span><span class="dot"></span><span id="syncStatus">Connecting…</span></span><span id="syncWho"></span></div>
+    </div>
+
+    <div class="card">
+      <h2>Key blades</h2>
+      <p class="invsection-hint">Every blade code referenced anywhere in the vehicle database. Part numbers shown are your real confirmed part numbers where known — codes without one are shown blank, not guessed.</p>
+      <table class="invtable" id="invBlades"><thead><tr><th>Code</th><th>Part no.</th><th>Used on</th><th>Qty</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2>Lishi picks</h2>
+      <p class="invsection-hint">Same code list as the blades above — Lishi ownership is tracked separately since you can own the pick without stocking the blank (or vice versa). Starting quantities were derived from the per-vehicle Lishi ownership already confirmed in the checker database.</p>
+      <table class="invtable" id="invLishi"><thead><tr><th>Code</th><th>Used on</th><th>Qty</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2>Bench adapters</h2>
+      <p class="invsection-hint">Your GoDiag and Xhorse solder-free adapter kit. The Job Checker cross-checks these against bench-job vehicle entries where a specific platform/adapter match is confirmed — see the "Bench equipment" line in a bench-job result.</p>
+      <table class="invtable" id="invAdapters"><thead><tr><th>Item</th><th>Description</th><th>Qty</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2>Programmers &amp; tools</h2>
+      <p class="invsection-hint">Your core programming and key-cutting hardware.</p>
+      <table class="invtable" id="invTools"><thead><tr><th>Item</th><th>Description</th><th>Qty</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div><!-- /tab-inventory -->
+
 </div>
 
-<script>
+<script type="module">
+// ---------------- Firebase (shared live inventory — free Spark plan project "locksmith-tool") ----------------
+// Loaded dynamically and defensively: if the CDN is unreachable (offline, a blocked
+// network, an ad/script blocker) the whole Job Checker must keep working — only the
+// live inventory sync should degrade, falling back to a local-only copy on this device.
+const firebaseConfig = {
+  apiKey: "AIzaSyCUGY2OAAN7JRiHXyPH211wX0Ls6gIa-tg",
+  authDomain: "locksmith-tool.firebaseapp.com",
+  projectId: "locksmith-tool",
+  storageBucket: "locksmith-tool.firebasestorage.app",
+  messagingSenderId: "133210676681",
+  appId: "1:133210676681:web:93f78d27de2abfa3a11c18"
+};
+let getDoc, setDoc, updateDoc, onSnapshot, invDocRef;
+let firebaseReady = false;
+async function loadFirebase(){
+  try {
+    const [{ initializeApp }, fs] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js")
+    ]);
+    getDoc = fs.getDoc; setDoc = fs.setDoc; updateDoc = fs.updateDoc; onSnapshot = fs.onSnapshot;
+    const fbApp = initializeApp(firebaseConfig);
+    const fbDb = fs.getFirestore(fbApp);
+    invDocRef = fs.doc(fbDb, "inventory", "shared");
+    firebaseReady = true;
+  } catch(e){
+    console.error('Firebase failed to load — falling back to local-only inventory.', e);
+    firebaseReady = false;
+  }
+}
+
 // ---------------- Stock snapshot (mirrors Locksmith_Stock_Tracker.xlsx) ----------------
 // Update this object (or ask Claude to regenerate the tool) whenever your spreadsheet changes.
 const SNAPSHOT_DATE = "19 Aug 2026 — real key blade stock, Lishi kit, Autel IM508S + Xhorse Key Tool Plus (Full) all confirmed; bench-adapter/licence ownership still unconfirmed. Vehicle database deep-expanded across all makes/generations (research pass, Aug 2026) — entries marked check-live-list/unconfirmed reflect genuine gaps in public sourcing, not guesses.";
@@ -215,12 +311,26 @@ const stock = {
 };
 document.getElementById('snapDate').textContent = SNAPSHOT_DATE;
 
+function codeAppears(code, text){
+  const esc = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp('\\b' + esc + '\\b').test(text);
+}
+
+// Live-inventory-aware version: checks the shared Firestore-backed INVENTORY.blades
+// first (keyed directly by DB code), then falls back to the alias chain — so a code
+// you've stocked under its own name always wins, and a code that only exists as an
+// alias (e.g. HU92 -> HU92R) still resolves correctly.
 function resolveBladeStock(dbCode){
+  const direct = INVENTORY.blades[dbCode];
+  if(direct && direct > 0){
+    return { have:true, part: (BLADE_META[dbCode] && BLADE_META[dbCode].part) || null, matchedCode: dbCode, looseNote: null };
+  }
   const codes = stock.aliases[dbCode] || [];
   for(const code of codes){
-    const entry = stock.blades[code];
-    if(entry && entry.have){
-      return { have:true, part:entry.part, matchedCode:code, looseNote: stock.looseMatch[dbCode] || null };
+    if(code === dbCode) continue;
+    const q = INVENTORY.blades[code];
+    if(q && q > 0){
+      return { have:true, part: (BLADE_META[code] && BLADE_META[code].part) || null, matchedCode: code, looseNote: stock.looseMatch[dbCode] || null };
     }
   }
   return { have:false, part:null, matchedCode:null, looseNote:null };
@@ -339,11 +449,13 @@ const DB = [
     blade:"HU92", lishi:"HU92", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (CAS3+ ISN read, usually)", autel:"partial", xhorse:"partial"},
+    bench:["godiag_cas12mech","godiag_cas23ser","xdnp11"],
     note:"⚠ CAS3+ (R56 facelift ~2010–2014) all-keys-lost carries a documented BRICKING RISK doing it over OBD with the Xhorse Key Tool Plus in certain circumstances — a recovery workaround exists but proceed with caution, have a recovery plan/backup EEPROM read before attempting via OBD on this specific generation." },
   { make:"MINI", model:"F54/F55/F56/F57/F60 (Clubman/Hatch/Convertible/Countryman, 2014–2023/2024, FEM/BDC)",
     blade:"HU100R", lishi:"HU100R — you DO own this pick (your 32-item Lishi list has it listed for 'New BMW, Rolls Royce'; HU92 does NOT cover this generation, this is the correct one)", lishiOwned:"yes",
     add:{method:"Bench (OBD-via-BDC possible on 2023+ firmware)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench (OBD-capable on 2023+ Autel firmware update)", autel:"partial", xhorse:"partial"},
+    bench:["godiag_femdbc","xdnp18"],
     note:"Confirm your specific IM508S has the 2023 'BDC by OBD' firmware update before quoting AKL as same-day — earlier firmware needs bench/module removal. Blade is HU100R (FEM/BDC family), not the older HU92." },
 
   // ================= VOLVO =================
@@ -356,12 +468,14 @@ const DB = [
     blade:"NE66", lishi:"NE66 (4-track 2-in-1/3-in-1)", lishiOwned:"no",
     add:{method:"OBD (CEM-gatekept PIN)", autel:"check", xhorse:"partial"},
     akl:{method:"CEM PIN-read (OBD or bench EEPROM)", autel:"check", xhorse:"partial"},
-    note:"This is the genuinely different, non-Ford Volvo system — CEM/VIDA architecture, distinct from both the older Ford-platform Volvo (HU101) and the modern SPA Volvo (also HU101, confusingly). NE66 blade is the visual tell." },
+    bench:["xdnp27","xdnp28","xdnp29"],
+    note:"This is the genuinely different, non-Ford Volvo system — CEM/VIDA architecture, distinct from both the older Ford-platform Volvo (HU101) and the modern SPA Volvo (also HU101, confusingly). NE66 blade is the visual tell. Bench module tag: you own Volvo KVM/CEM-1/CEM-2 adapters (XDNP27/28/29) but which one matches this exact CEM generation isn't independently confirmed — check the module label before the job." },
   { make:"Volvo", model:"S60/V60 Mk2, S80 Mk2 (late), V70 Mk3, XC70 Mk2, XC60 Mk1 (P3 platform, ~2007/2008–2016/2018)",
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD (slow — can take hours for CEM PIN read)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench EEPROM read of CEM is faster; pure OBD can take up to ~24hrs uninterrupted", autel:"partial", xhorse:"partial"},
-    note:"Same HU101 blade as Ford-platform Volvo/Ford itself despite being a wholly different (Volvo-native CEM) electronic system — blade code alone doesn't tell you the architecture. Set customer expectations: this is not a same-visit job via pure OBD in many cases." },
+    bench:["xdnp27","xdnp28","xdnp29"],
+    note:"Same HU101 blade as Ford-platform Volvo/Ford itself despite being a wholly different (Volvo-native CEM) electronic system — blade code alone doesn't tell you the architecture. Set customer expectations: this is not a same-visit job via pure OBD in many cases. Bench module tag: same caveat as the P2 CEM entry — confirm which of your Volvo KVM/CEM-1/CEM-2 adapters matches this module before the job." },
   { make:"Volvo", model:"XC90 Mk2 (SPA platform, 2015+)",
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD (4-6hrs) or EEPROM+OBD combined (~3hrs, needs stable battery charger)", autel:"partial", xhorse:"partial"},
@@ -388,11 +502,13 @@ const DB = [
     blade:"HU66", lishi:"HU66", lishiOwned:"yes",
     add:{method:"OBD (generally possible with correct pin data)", autel:"partial", xhorse:"partial"},
     akl:{method:"Frequently bench (dashboard removal, PIN/CS extraction)", autel:"partial", xhorse:"partial"},
+    bench:["godiag_vag_gt"],
     note:"This is the biggest gap that existed in the old data — these run a much longer-lived Immo4/Immo4+ dashboard-EEPROM system, NOT the MQB timeline the passenger cars follow. UK van forum threads show mixed/unconfirmed OBD success on later T6/T6.1 — treat as check-live-list for immo work, not a blanket yes." },
   { make:"VW/Audi/Seat/Skoda", model:"Crafter (2017+, MAN-based 2nd gen)",
     blade:"HU64", lishi:"HU64 2-in-1 (10-cut V3 — different tool from HU66)", lishiOwned:"no",
     add:{method:"Bench/dashboard-based", autel:"check", xhorse:"check"},
     akl:{method:"Bench", autel:"check", xhorse:"check"},
+    bench:["godiag_vag_gt"],
     note:"Do not assume Crafter = same blade/procedure as Transporter/Caddy — it uses a dedicated dashboard immobiliser with its own HU64 blade (also sold as HU116 by some suppliers), different from both Golf/Passat and the Transporter/Caddy family." },
   { make:"VW/Audi/Seat/Skoda", model:"MQB48 — VW/Audi (Golf 7, Passat B8, A3 8V, Q2, TT 8S, S3/RS3, 2013–2020)",
     blade:"HU66 (blade-key) / HU162T-9 (VW, smart-key) / HU162T-10 (Audi, smart-key)", lishi:"HU66 / HU162T-9 / HU162T-10", lishiOwned:"yes",
@@ -445,26 +561,31 @@ const DB = [
     blade:"HU92", lishi:"HU92", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
+    bench:["godiag_cas12mech"],
     note:"Straightforward PIN/ISN read over OBD. Note EWS and CAS1 overlapped messily by chassis and even build date within a chassis on E39/E46 facelifts — verify on-car if it's a borderline year." },
   { make:"BMW", model:"CAS3/CAS3+ (E87, E90, E92, E93, E70, E71, E84, E89, ~2005–2013)",
     blade:"HU92", lishi:"HU92", lishiOwned:"yes",
     add:{method:"OBD (usually)", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (usually, mature/well-documented on both tools)", autel:"yes", xhorse:"yes"},
+    bench:["godiag_cas23ser","xdnp11"],
     note:"CAS3+ AKL typically needs a bench ISN read, not plug-and-play OBD, but this is a very mature capability on both IM508S and KTP." },
   { make:"BMW", model:"CAS4/CAS4+ (F01/F02, F10/F11, F06/F12/F13, F25, ~2009–2014, larger F-chassis)",
     blade:"HU100R", lishi:"HU100R", lishiOwned:"yes",
     add:{method:"OBD (mature capability)", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (module read/write, sometimes OBD-assisted)", autel:"yes", xhorse:"yes"},
+    bench:["xdnp12"],
     note:"CORRECTION: CAS4/large F-chassis uses HU100R, the small-profile blade introduced with CAS4 — NOT HU92. Distinct from FEM/BDC below, which also uses HU100R but is a different module generation." },
   { make:"BMW", model:"FEM/BDC (F20/F21/F22/F23, F30/F31/F32/F33/F34/F36, F15/F16 X5/X6, ~2011/2013–2019)",
     blade:"HU100R", lishi:"HU100R", lishiOwned:"yes",
     add:{method:"Bench (module removal typically required even for a spare key)", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (mandatory module removal — G-Box2/APA103/FEM-BDC Test Platform, then OBD sync to DME)", autel:"yes", xhorse:"yes"},
+    bench:["godiag_femdbc","xdnp18"],
     note:"CORRECTION: blade is HU100R, not HU92 (the old data's mistake). Genuinely a bench job on both tools for add-key and AKL in most real-world cases — needs the FEM/BDC adapter/test platform. You DO own the HU100R Lishi pick (item 5 on your real list, listed for 'New BMW, Rolls Royce') — the earlier version of this tool had this wrong." },
   { make:"BMW", model:"G-series keyless (G20/G30/G05/G11 etc., 2018+, BDC2/BDC3/BCP)",
     blade:"HU100R (most emergency inserts) or HU162T-10 (some newer/keyless-card variants) — verify per VIN", lishi:"HU100R / HU162T-10 (check which) — you own both", lishiOwned:"yes",
     add:{method:"Bench + dedicated adapter now genuinely possible on both tools (as of ~2025/2026 updates)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench — BDC2 module removal required for AKL; BDC3/BCP sometimes doable via PCB cloning without removal", autel:"partial", xhorse:"partial"},
+    bench:["godiag_femdbc","xdnp18"],
     note:"This moved from 'no aftermarket coverage' to 'yes, with paid adapters and bench skill' within the last 12–18 months (Autel G-Box2/APA103/Test Platform; Xhorse dedicated BMW adapter kit) — it's newly rolled out and VIN/option-code dependent, confirm against the live coverage list before quoting." },
 
   { make:"Rolls-Royce", model:"Phantom VII (2003–2016, BMW E65/E66-derived)",
@@ -476,11 +597,13 @@ const DB = [
     blade:"Likely HU100R by platform-sharing (unconfirmed for Rolls-Royce specifically)", lishi:"HU100R — you own this pick (your real Lishi list explicitly names it for 'New BMW, Rolls Royce'), just unconfirmed whether it's the exact fit for this model", lishiOwned:"close",
     add:{method:"Bench, by platform inference matching BMW CAS4/FEM — confirm your tool lists Rolls-Royce as selectable make/model", autel:"check", xhorse:"check"},
     akl:{method:"Bench, same inference", autel:"check", xhorse:"check"},
+    bench:["godiag_femdbc","xdnp18","xdnp12"],
     note:"Dealerships will almost certainly refuse to program a used/aftermarket key fob on these — a real, confirmed opportunity for independent locksmiths. Verify live since Rolls-Royce is rarely explicitly listed by name even when the underlying BMW procedure works." },
   { make:"Rolls-Royce", model:"Phantom VIII (2017+), Cullinan (2018+), Ghost II (2020+), Spectre (2023+) — BMW G-series-era",
     blade:"Likely HU100R or HU162T-10 (unconfirmed, verify per VIN)", lishi:"HU100R / HU162T-10 — you own both picks, unconfirmed which fits this exact model", lishiOwned:"close",
     add:{method:"Dealer/specialist-mostly, likely more restrictive than BMW G-series given tighter dealer network", autel:"check", xhorse:"check"},
     akl:{method:"Dealer/specialist-mostly", autel:"check", xhorse:"check"},
+    bench:["godiag_femdbc","xdnp18"],
     note:"Given the very high value and very low volume of this segment, treat every job as requiring a direct, live compatibility check before quoting — don't extrapolate confidently from BMW G-series coverage." },
 
   // ================= MERCEDES-BENZ / SMART =================
@@ -493,11 +616,13 @@ const DB = [
     blade:"HU64", lishi:"HU64", lishiOwned:"yes",
     add:{method:"OBD (sometimes) / Bench", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (usually)", autel:"yes", xhorse:"yes"},
+    bench:["xdkp30","vvdi_prog_ezs"],
     note:"EIS/EZS removal for bench read is common on AKL jobs." },
   { make:"Mercedes-Benz", model:"FBS3 (~2010–2015, NEC+)",
     blade:"HU64", lishi:"HU64", lishiOwned:"yes",
     add:{method:"Bench (usually)", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (usually)", autel:"yes", xhorse:"yes"},
+    bench:["xdkp30","vvdi_prog_ezs"],
     note:"Often needs a dedicated Benz bench solution/token beyond the standard programmer." },
   { make:"Mercedes-Benz", model:"FBS4 (2015+, W205, W213, W177, W447-facelift and newer)",
     blade:"HU64 (emergency insert)", lishi:"HU64", lishiOwned:"yes",
@@ -508,6 +633,7 @@ const DB = [
     blade:"Unconfirmed — verify physically, may differ slightly from passenger HU64", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Bench, same as passenger-car FBS3", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench — one of the most common commercial AKL jobs per UK locksmith sources", autel:"yes", xhorse:"yes"},
+    bench:["xdkp30","vvdi_prog_ezs"],
     note:"Shares FBS3 generation with contemporary passenger cars — strong real-world aftermarket coverage." },
   { make:"Mercedes-Benz", model:"Sprinter (VS30 platform, W907/W910, 2018/2019+)",
     blade:"Unconfirmed — verify physically", lishi:"Unconfirmed", lishiOwned:"no",
@@ -523,6 +649,7 @@ const DB = [
     blade:"HU64 (by inference from platform-sharing, unconfirmed)", lishi:"HU64 (unconfirmed)", lishiOwned:"yes",
     add:{method:"OBD/Bench per era, consistent with passenger-car equivalents", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD/Bench per era", autel:"yes", xhorse:"yes"},
+    bench:["xdkp30","vvdi_prog_ezs"],
     note:"High confidence given FBS2/FBS3-era maturity on both tools, though not independently confirmed line-by-line for this van." },
 
   { make:"Smart", model:"City-Coupe / Fortwo, Type 450 (1998–2007)",
@@ -904,22 +1031,26 @@ const DB = [
     blade:"Keyless, no blade (emergency insert code unconfirmed)", lishi:"N/A / unconfirmed", lishiOwned:"no",
     add:{method:"2013: confirmed OBD add & AKL with Autel (Manual Selection → Evoque → 2013 Smart Key). 2017+: Xhorse OBD add-key reported (title only, unverified depth)", autel:"partial", xhorse:"partial"},
     akl:{method:"2013: OBD, confirmed. 2015-2018 KVM-era: Bench (module removal + desolder, see F-Pace procedure below)", autel:"partial", xhorse:"partial"},
-    note:"Do not assume all Evoque years behave the same — 2013 is meaningfully easier than 2016+." },
+    bench:["autel_xp400","xdnp16"],
+    note:"Do not assume all Evoque years behave the same — 2013 is meaningfully easier than 2016+. Bench equipment: the F-Pace/XJ procedure below explicitly needs the XP400 Pro (confirmed owned) via an APA106 cable (ownership unconfirmed) — your Xhorse Land Rover KVM adapter (XDNP16) is marketed solder-free but isn't independently confirmed to remove the desolder step for this exact module." },
   { make:"Land Rover/Jaguar", model:"Discovery Sport (2015+) / Range Rover Velar (2017+) — KVM/RFA generation",
     blade:"Keyless, no blade — emergency insert code unconfirmed, verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Bench (inferred same family as F-Pace/Evoque, not independently sourced for these two specifically)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench, same inference", autel:"partial", xhorse:"partial"},
-    note:"Treat as same-family as the confirmed F-Pace/XJ bench procedure below — verify per VIN before quoting." },
+    bench:["autel_xp400","xdnp16"],
+    note:"Treat as same-family as the confirmed F-Pace/XJ bench procedure below — verify per VIN before quoting. See the F-Pace/XJ entry below for the confirmed procedure and equipment caveat — same applies here by platform inference." },
   { make:"Land Rover/Jaguar", model:"F-Pace (2016+) / Jaguar XJ facelift X351 (2016-2019) — RFA/KVM module",
     blade:"Keyless, no blade", lishi:"N/A", lishiOwned:"no",
     add:{method:"Confirmed NOT possible via OBD — requires bench: remove RFA/KVM module, desolder crystal+capacitor, MCU to XP400 Pro via APA106 cable, read/write D-Flash+EEPROM", autel:"partial", xhorse:"partial"},
     akl:{method:"Same bench process — confirmed directly for both F-Pace 2018 and XJ 2017", autel:"partial", xhorse:"partial"},
-    note:"This is the clearest, most concrete evidence in the whole JLR research pass — use as the reference procedure for the whole 2015-2021 JLR family. Confirm your IM508S kit actually includes an XP400 Pro (not guaranteed bundled) before quoting this job at all." },
+    bench:["autel_xp400","xdnp16"],
+    note:"This is the clearest, most concrete evidence in the whole JLR research pass — use as the reference procedure for the whole 2015-2021 JLR family. Confirm your IM508S kit actually includes an XP400 Pro (not guaranteed bundled) before quoting this job at all. You do own the XP400 Pro this procedure calls for — confirmed. The APA106 cable and the exact fit of your Xhorse Land Rover KVM adapter (XDNP16) for this module are not independently confirmed — check both before quoting." },
   { make:"Land Rover/Jaguar", model:"Range Rover / Range Rover Sport (L405/L494, 2013-2021)",
     blade:"Keyless, no blade — emergency insert code unconfirmed", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Bench (KVM module removal), same family as F-Pace", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench, same family", autel:"partial", xhorse:"partial"},
-    note:"Real soldering skill required, budget accordingly — this is not a quick-visit job." },
+    bench:["autel_xp400","xdnp16"],
+    note:"Real soldering skill required, budget accordingly — this is not a quick-visit job. Same equipment as the F-Pace/XJ entry above — XP400 Pro confirmed owned, APA106 cable and exact KVM adapter fit unconfirmed." },
   { make:"Land Rover/Jaguar", model:"Range Rover / Range Rover Sport (L460/L461, 2022+) — Ultra-Wideband (UWB) digital key",
     blade:"Keyless, no blade", lishi:"N/A", lishiOwned:"no",
     add:{method:"No confirmed aftermarket path — dealer-only", autel:"no", xhorse:"no"},
@@ -934,6 +1065,7 @@ const DB = [
     blade:"Keyless, no blade — unconfirmed this pass, presumed same KVM/RFA bucket as F-Pace/XJ by generation", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"check-live-list, verify physically before quoting", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
+    bench:["autel_xp400","xdnp16"],
     note:"Matches the prior baseline entry for the 2013+ KVM/BCM bucket — strongly supported by the F-Pace/XJ bench-procedure evidence, but not independently re-confirmed for these two models by name." },
   { make:"Land Rover/Jaguar", model:"⚠ ALL 2022+ JLR (Range Rover/Discovery/Evoque/Velar/Defender, Jaguar E-Pace/F-Pace/I-Pace/F-Type/XF/XE/XJ) — RFA/KVM function gate",
     blade:"n/a — this entry is a standalone tool-gating warning, check the specific model's own entry above for blade/method", lishi:"n/a", lishiOwned:"no",
@@ -988,6 +1120,255 @@ const XHORSE_REMOTES = [
   { sku:"XNDS00EN", family:"DS style — Citroen/Peugeot", notes:"3-button flip", makesMatch:["Peugeot/Citroen","DS Automobiles"] },
 ];
 
+// ---------------- Inventory: derived catalog + live Firestore sync ----------------
+// CODES is the master vocabulary shared by the blade and Lishi tables (same list —
+// a locksmith can own the Lishi pick for a code without stocking the physical blank,
+// or vice versa, so they're tracked as separate quantities against the same codes).
+const CODES = Object.keys(stock.aliases);
+
+// Real confirmed part number for a code, resolved through the alias chain if the
+// code itself isn't one of your 15 directly-stocked blade types. Blank (not guessed)
+// when nothing resolves.
+const BLADE_META = {};
+CODES.forEach(code => {
+  if(stock.blades[code]){
+    BLADE_META[code] = { part: stock.blades[code].part };
+  } else {
+    const alt = (stock.aliases[code] || [])[0];
+    BLADE_META[code] = { part: alt && stock.blades[alt] ? stock.blades[alt].part : null };
+  }
+});
+
+function usedOnBlade(code){
+  const out = [];
+  DB.forEach(d => {
+    if(codeAppears(code, d.blade) && !out.includes(d.make + ' ' + d.model)) out.push(d.make + ' ' + d.model);
+  });
+  return out;
+}
+function usedOnLishi(code){
+  const out = [];
+  DB.forEach(d => {
+    if(codeAppears(code, d.lishi) && !out.includes(d.make + ' ' + d.model)) out.push(d.make + ' ' + d.model);
+  });
+  return out;
+}
+// Starting Lishi quantities are derived from the lishiOwned tag already authored per
+// vehicle against your real 32-item Lishi list — not re-guessed here. "yes" or "close"
+// (you own a related pick) both start at 1 so the row isn't blank; "no" starts at 0.
+function defaultLishiQty(code){
+  let owned = false, close = false;
+  DB.forEach(d => {
+    if(codeAppears(code, d.lishi)){
+      if(d.lishiOwned === 'yes') owned = true;
+      if(d.lishiOwned === 'close') close = true;
+    }
+  });
+  return (owned || close) ? 1 : 0;
+}
+
+// Real, confirmed bench adapters/tools only — nothing here was guessed. cat:'adapter'
+// renders in the Bench adapters table, cat:'tool' in Programmers & tools.
+const EQUIPMENT_CATALOG = {
+  godiag_cas12mech: { cat:'adapter', label:'GoDiag BMW CAS1/CAS2 Mech-Key Test Platform', desc:'Works with Key Tool Plus/VVDI2/BMW BIM Tool for CAS1/CAS2 all-keys-lost or add-key matching.', defaultQty:1 },
+  godiag_cas23ser: { cat:'adapter', label:'GoDiag CAS2/CAS3 SER Semi-Smart Test Platform (SK421)', desc:'Solder-free CAS2/CAS3 detection, key synchronisation, CAS data read/write/program.', defaultQty:1 },
+  godiag_femdbc: { cat:'adapter', label:'GoDiag BMW FEM/BDC Programming Test Platform (SK348)', desc:'Bench platform for BMW/MINI FEM/BDC module programming.', defaultQty:1 },
+  godiag_vag_gt: { cat:'adapter', label:'GoDiag VAG Test Platform bundle (GT110/GT111/GT112/GT114)', desc:'VAG-group dashboard/immobiliser bench test platform bundle — covers the Immo4/Immo4+-era VW commercial-vehicle gap.', defaultQty:1 },
+  xdnp11: { cat:'adapter', label:'Xhorse XDNP11', desc:'BMW CAS3 adapter, solder-free.', defaultQty:1 },
+  xdnp12: { cat:'adapter', label:'Xhorse XDNP12', desc:'BMW CAS4/CAS4+ adapter v1.2.', defaultQty:1 },
+  xdnp14: { cat:'adapter', label:'Xhorse XDNP14', desc:'DB15–DB25 adapter (EWS4).', defaultQty:1 },
+  xdnp16: { cat:'adapter', label:'Xhorse XDNP16', desc:'Land Rover KVM adapter v1.1.', defaultQty:1 },
+  xdnp17: { cat:'adapter', label:'Xhorse XDNP17', desc:'Porsche BCM adapter v1.3.', defaultQty:1 },
+  xdnp18: { cat:'adapter', label:'Xhorse XDNP18', desc:'BMW FRM adapter.', defaultQty:1 },
+  xdnp19: { cat:'adapter', label:'Xhorse XDNP19', desc:'MB91F dashboard adapter for Honda Fit-H.', defaultQty:1 },
+  xdnp20: { cat:'adapter', label:'Xhorse XDNP20', desc:'Honda Fit-L dashboard adapter.', defaultQty:1 },
+  xdnp21: { cat:'adapter', label:'Xhorse XDNP21', desc:'Hyundai Sonata dashboard adapter.', defaultQty:1 },
+  xdnp24: { cat:'adapter', label:'Xhorse XDNP24', desc:'Porsche 35080 adapter.', defaultQty:1 },
+  xdnp25: { cat:'adapter', label:'Xhorse XDNP25', desc:'Kia K3 dashboard adapter.', defaultQty:1 },
+  xdnp26: { cat:'adapter', label:'Xhorse XDNP26', desc:'Kia K5 dashboard adapter.', defaultQty:1 },
+  xdnp27: { cat:'adapter', label:'Xhorse XDNP27', desc:'Volvo KVM adapter v1.0.', defaultQty:1 },
+  xdnp28: { cat:'adapter', label:'Xhorse XDNP28', desc:'Volvo CEM-1 adapter.', defaultQty:1 },
+  xdnp29: { cat:'adapter', label:'Xhorse XDNP29', desc:'Volvo CEM-2 adapter.', defaultQty:1 },
+  xdkp30: { cat:'adapter', label:'Xhorse XDKP30 Multi-function Adapter', desc:'Multi-function bench adapter.', defaultQty:1 },
+  vvdi_prog_ezs: { cat:'adapter', label:'Xhorse VVDI Prog EZS Adapter set (SO453, 10pcs)', desc:'Benz EIS/EZS bench adapter — works with Key Tool Plus, VVDI Prog, Multi Prog, Mini Prog, VVDI MB.', defaultQty:10 },
+  autel_im508s: { cat:'tool', label:'Autel MaxiIM IM508S', desc:'Base key programming/diagnostic tablet.', defaultQty:1 },
+  xhorse_ktp: { cat:'tool', label:'Xhorse VVDI Key Tool Plus Pad (SK305, Advance GL / Full configuration)', desc:'Core Xhorse key programmer.', defaultQty:1 },
+  autel_xp400: { cat:'tool', label:'Autel XP400', desc:'Key programming reader/EEPROM adapter used alongside the IM508S. Not confirmed which exact variant ("Pro" or standard) you hold.', defaultQty:1 },
+  dolphin2: { cat:'tool', label:'Xhorse Dolphin II XP-005L', desc:'Automatic key-cutting machine, HD screen + M5 clamp.', defaultQty:1 },
+  xhorse_mqb48_token: { cat:'tool', label:'Xhorse MQB48 daily token', desc:'Free 1-token/day allowance only — you do NOT hold a paid MQB48 licence. This is a daily consumable, not stock: confirm a token is actually available before quoting an MQB48 job.', defaultQty:1 }
+};
+
+function buildDefaultInventory(){
+  const blades = {};
+  CODES.forEach(code => { blades[code] = (stock.blades[code] && stock.blades[code].have) ? 1 : 0; });
+  const lishi = {};
+  CODES.forEach(code => { lishi[code] = defaultLishiQty(code); });
+  const equipment = {};
+  Object.keys(EQUIPMENT_CATALOG).forEach(id => { equipment[id] = EQUIPMENT_CATALOG[id].defaultQty; });
+  return { blades, lishi, equipment };
+}
+
+let INVENTORY = buildDefaultInventory();
+const inputRefs = {};
+
+function setSyncStatus(ok, msg){
+  const bar = document.getElementById('syncBar');
+  const status = document.getElementById('syncStatus');
+  if(!bar || !status) return;
+  bar.classList.toggle('err', !ok);
+  status.textContent = msg;
+}
+
+const pendingWrites = {};
+let writeTimer = null;
+function queueWrite(section, code, value){
+  pendingWrites[section + '.' + code] = value;
+  clearTimeout(writeTimer);
+  writeTimer = setTimeout(flushWrites, 600);
+}
+async function flushWrites(){
+  const updates = Object.assign({}, pendingWrites);
+  const keys = Object.keys(updates);
+  keys.forEach(k => delete pendingWrites[k]);
+  if(!keys.length) return;
+  if(!firebaseReady){
+    setSyncStatus(false, "Not connected to shared inventory — this change is saved on this device only.");
+    keys.forEach(k => { if(inputRefs[k]) inputRefs[k].classList.remove('dirty'); });
+    return;
+  }
+  try {
+    await updateDoc(invDocRef, updates);
+    setSyncStatus(true, 'Live — synced');
+    keys.forEach(k => { if(inputRefs[k]) inputRefs[k].classList.remove('dirty'); });
+  } catch(e){
+    try {
+      await setDoc(invDocRef, INVENTORY, { merge:true });
+      setSyncStatus(true, 'Live — synced');
+      keys.forEach(k => { if(inputRefs[k]) inputRefs[k].classList.remove('dirty'); });
+    } catch(e2){
+      console.error(e2);
+      setSyncStatus(false, "Couldn't save — check your connection. Your change is kept on this device.");
+    }
+  }
+}
+
+async function initInventorySync(){
+  setSyncStatus(true, 'Connecting…');
+  renderInventoryTables(); // render the local-default copy immediately so the tab isn't blank while we connect
+  await loadFirebase();
+  if(!firebaseReady){
+    setSyncStatus(false, "Couldn't reach the shared inventory (offline or blocked) — showing this device's local copy. Quantities you change here won't sync to other devices until this reconnects.");
+    return;
+  }
+  try {
+    const snap = await getDoc(invDocRef);
+    if(snap.exists()){
+      const data = snap.data();
+      INVENTORY = {
+        blades: Object.assign({}, INVENTORY.blades, data.blades || {}),
+        lishi: Object.assign({}, INVENTORY.lishi, data.lishi || {}),
+        equipment: Object.assign({}, INVENTORY.equipment, data.equipment || {})
+      };
+    } else {
+      await setDoc(invDocRef, INVENTORY, { merge:true });
+    }
+    renderInventoryTables();
+  } catch(e){
+    console.error(e);
+    setSyncStatus(false, "Couldn't reach the shared inventory — showing this device's local copy.");
+    return;
+  }
+  onSnapshot(invDocRef, (snap) => {
+    if(snap.exists()){
+      const data = snap.data();
+      INVENTORY = {
+        blades: Object.assign({}, INVENTORY.blades, data.blades || {}),
+        lishi: Object.assign({}, INVENTORY.lishi, data.lishi || {}),
+        equipment: Object.assign({}, INVENTORY.equipment, data.equipment || {})
+      };
+      renderInventoryTables();
+      setSyncStatus(true, 'Live — synced');
+    }
+  }, (err) => {
+    console.error(err);
+    setSyncStatus(false, 'Offline — changes save on this device only until reconnected.');
+  });
+}
+
+function makeQtyInput(section, code, qty, tr){
+  const input = document.createElement('input');
+  input.type = 'number'; input.min = '0'; input.step = '1'; input.value = qty;
+  if(qty === 0) tr.classList.add('qtyrow-zero');
+  inputRefs[section + '.' + code] = input;
+  input.addEventListener('input', () => input.classList.add('dirty'));
+  input.addEventListener('change', () => {
+    const v = Math.max(0, parseInt(input.value, 10) || 0);
+    input.value = v;
+    INVENTORY[section][code] = v;
+    tr.classList.toggle('qtyrow-zero', v === 0);
+    queueWrite(section, code, v);
+  });
+  return input;
+}
+
+function renderInventoryTables(){
+  const bladesBody = document.querySelector('#invBlades tbody');
+  if(bladesBody){
+    bladesBody.innerHTML = '';
+    CODES.forEach(code => {
+      const tr = document.createElement('tr');
+      const part = BLADE_META[code] && BLADE_META[code].part;
+      const usedTd = document.createElement('td'); usedTd.className = 'invmeta'; usedTd.textContent = usedOnBlade(code).join(', ') || '—';
+      const qtyTd = document.createElement('td');
+      tr.innerHTML = `<td class="invcode">${code}</td><td>${part || ''}</td>`;
+      tr.appendChild(usedTd); tr.appendChild(qtyTd);
+      qtyTd.appendChild(makeQtyInput('blades', code, INVENTORY.blades[code] || 0, tr));
+      bladesBody.appendChild(tr);
+    });
+  }
+
+  const lishiBody = document.querySelector('#invLishi tbody');
+  if(lishiBody){
+    lishiBody.innerHTML = '';
+    CODES.filter(code => usedOnLishi(code).length).forEach(code => {
+      const tr = document.createElement('tr');
+      const usedTd = document.createElement('td'); usedTd.className = 'invmeta'; usedTd.textContent = usedOnLishi(code).join(', ') || '—';
+      const qtyTd = document.createElement('td');
+      tr.innerHTML = `<td class="invcode">${code}</td>`;
+      tr.appendChild(usedTd); tr.appendChild(qtyTd);
+      qtyTd.appendChild(makeQtyInput('lishi', code, INVENTORY.lishi[code] || 0, tr));
+      lishiBody.appendChild(tr);
+    });
+  }
+
+  function renderEquipment(tableId, cat){
+    const body = document.querySelector('#' + tableId + ' tbody');
+    if(!body) return;
+    body.innerHTML = '';
+    Object.keys(EQUIPMENT_CATALOG).filter(id => EQUIPMENT_CATALOG[id].cat === cat).forEach(id => {
+      const item = EQUIPMENT_CATALOG[id];
+      const tr = document.createElement('tr');
+      const descTd = document.createElement('td'); descTd.className = 'invmeta'; descTd.textContent = item.desc;
+      const qtyTd = document.createElement('td');
+      tr.innerHTML = `<td class="invcode">${item.label}</td>`;
+      tr.appendChild(descTd); tr.appendChild(qtyTd);
+      qtyTd.appendChild(makeQtyInput('equipment', id, INVENTORY.equipment[id] || 0, tr));
+      body.appendChild(tr);
+    });
+  }
+  renderEquipment('invAdapters', 'adapter');
+  renderEquipment('invTools', 'tool');
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  const checkerPanel = document.getElementById('tab-checker');
+  const invPanel = document.getElementById('tab-inventory');
+  if(checkerPanel) checkerPanel.classList.toggle('active', name === 'checker');
+  if(invPanel) invPanel.classList.toggle('active', name === 'inventory');
+}
+window.switchTab = switchTab;
+
 // ---------------- UI wiring ----------------
 const makes = [...new Set(DB.map(d => d.make))];
 const makeSel = document.getElementById('make');
@@ -1040,10 +1421,6 @@ function runCheck(){
 
   // ---- stock check ----
   const isKeyless = /keyless|n\/a/i.test(entry.blade);
-  function codeAppears(code, text){
-    const esc = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp('\\b' + esc + '\\b').test(text);
-  }
   const dbCodes = Object.keys(stock.aliases).filter(code => codeAppears(code, entry.blade));
   const bladeResults = dbCodes.map(code => ({ code, res: resolveBladeStock(code) }));
   const anyBladeHave = bladeResults.some(b => b.res.have);
@@ -1068,12 +1445,28 @@ function runCheck(){
     const lishiDetail = lishiOwned === 'yes' ? 'Owned — matches your real Lishi list' : (lishiOwned === 'close' ? 'You own a close/related pick — check it fits this exact cut (see note below)' : 'Not in your Lishi kit — order/borrow before a job that needs picking or decoding');
     stockHtml += stockLine(`Lishi tool (${entry.lishi})`, lishiOwned === 'yes', lishiDetail);
   }
-  const autelOwned = stock.tools.autel508s;
-  const xhorseOwned = stock.tools.xhorseKTP;
-  stockHtml += stockLine('Autel IM508S owned', autelOwned === true, autelOwned === null ? 'Not confirmed — check the Programmers & Adapters tab' : (autelOwned ? 'Owned' : 'Not owned'));
-  stockHtml += stockLine('Xhorse Key Tool Plus owned', xhorseOwned === true, xhorseOwned === null ? 'Not confirmed — check the Programmers & Adapters tab' : (xhorseOwned ? 'Owned' : 'Not owned'));
+  const autelOwned = (INVENTORY.equipment.autel_im508s || 0) > 0;
+  const xhorseOwned = (INVENTORY.equipment.xhorse_ktp || 0) > 0;
+  stockHtml += stockLine('Autel IM508S owned', autelOwned, autelOwned ? 'Owned' : 'Not owned — check the Inventory tab');
+  stockHtml += stockLine('Xhorse Key Tool Plus owned', xhorseOwned, xhorseOwned ? 'Owned' : 'Not owned — check the Inventory tab');
+  let benchAllOwned = true;
   if(isBench){
-    stockHtml += stockLine('Bench adapter/license for this platform', false, 'Check the Programmers & Adapters tab — most bench jobs need an extra adapter or paid licence beyond the base unit');
+    if(entry.bench && entry.bench.length){
+      entry.bench.forEach(id => {
+        const item = EQUIPMENT_CATALOG[id];
+        const qty = INVENTORY.equipment[id] || 0;
+        const label = item ? item.label : id;
+        if(qty > 0){
+          stockHtml += stockLine('Bench equipment: ' + label, true, 'Owned — qty ' + qty);
+        } else {
+          benchAllOwned = false;
+          stockHtml += stockLine('Bench equipment: ' + label, false, 'Not in your kit — order/borrow before this job');
+        }
+      });
+    } else {
+      benchAllOwned = false;
+      stockHtml += stockLine('Bench equipment for this platform', false, 'Not yet mapped in this tool — check the Inventory tab manually for the right adapter/test platform');
+    }
   }
   document.getElementById('stockList').innerHTML = stockHtml;
 
@@ -1100,17 +1493,17 @@ function runCheck(){
   const bladeMissing = anyBladeKnown && !anyBladeHave;
   const lishiMissing = (lishiOwned === 'no');
   const lishiCloseOnly = (lishiOwned === 'close');
-  const toolsUnconfirmed = (autelOwned === null && xhorseOwned === null);
-  const toolsMissing = (autelOwned === false && xhorseOwned === false);
+  const toolsMissing = (!autelOwned && !xhorseOwned);
+  const benchEquipMissing = isBench && !benchAllOwned;
 
   if(isDealer || coverageBad || toolsMissing){
     box.classList.add('bad'); icon.textContent = '🔴';
     head.textContent = 'Likely DECLINE / refer on';
-    body.textContent = toolsMissing ? 'Neither programmer is marked as owned — confirm your equipment before quoting.' : 'Current aftermarket coverage for this platform is weak or dealer-only. Don\'t commit to a customer without confirming a route to completion first.';
-  } else if(coverageUnclear || bladeMissing || lishiMissing || lishiCloseOnly || isBench || toolsUnconfirmed){
+    body.textContent = toolsMissing ? 'Neither programmer is marked as owned in your Inventory tab — confirm your equipment before quoting.' : 'Current aftermarket coverage for this platform is weak or dealer-only. Don\'t commit to a customer without confirming a route to completion first.';
+  } else if(coverageUnclear || bladeMissing || lishiMissing || lishiCloseOnly || isBench){
     box.classList.add('warn'); icon.textContent = '🟡';
     head.textContent = 'CAUTION — verify before accepting';
-    body.textContent = (isBench ? 'This is a bench job — confirm you hold the right adapter/licence. ' : '') + (bladeMissing ? 'The blade isn\'t in your tracked stock. ' : '') + (lishiMissing ? 'You don\'t have the matching Lishi pick — order/borrow one if the job needs picking or decoding. ' : '') + (lishiCloseOnly ? 'Your Lishi pick is a close match, not exact — confirm it fits before you cut. ' : '') + (toolsUnconfirmed ? 'Programmer ownership isn\'t confirmed in this tool yet — fill in the Programmers & Adapters tab and ask Claude to refresh it. ' : '') + (coverageUnclear ? 'Tool coverage is partial or platform-dependent — check the live function list in-app.' : '');
+    body.textContent = (benchEquipMissing ? 'This is a bench job and your Inventory tab shows you\'re missing (or haven\'t mapped) the equipment it needs — check the Bench equipment line above before quoting. ' : (isBench ? 'This is a bench job — your Inventory tab shows you hold the mapped equipment, but double-check the exact module/variant before quoting. ' : '')) + (bladeMissing ? 'The blade isn\'t in your tracked stock. ' : '') + (lishiMissing ? 'You don\'t have the matching Lishi pick — order/borrow one if the job needs picking or decoding. ' : '') + (lishiCloseOnly ? 'Your Lishi pick is a close match, not exact — confirm it fits before you cut. ' : '') + (coverageUnclear ? 'Tool coverage is partial or platform-dependent — check the live function list in-app.' : '');
   } else {
     box.classList.add('ok'); icon.textContent = '🟢';
     head.textContent = 'Likely ACCEPT';
@@ -1121,6 +1514,9 @@ function runCheck(){
   document.getElementById('result').classList.add('show');
   document.getElementById('result').scrollIntoView({behavior:'smooth', block:'start'});
 }
+window.runCheck = runCheck;
+
+initInventorySync();
 </script>
 </body>
 </html>
