@@ -165,7 +165,7 @@
         </select>
       </div>
     </div>
-    <p class="hint" style="margin-top:-8px;">Search-as-you-type on Make and Model, same idea as scrolling/searching your Autel or Xhorse vehicle menus. Year is a narrowing aid pulled from the generation text already in each Model entry — some entries bundle a few sub-models with different year spans, so treat it as a shortcut to the right row, not an exact lookup.</p>
+    <p class="hint" style="margin-top:-8px;">Search-as-you-type on Make and Model, same idea as scrolling/searching your Autel or Xhorse vehicle menus. Every model for the make you pick is always in the list — Year (pulled from the generation text already in each Model entry) just sorts likely matches to the top, it never hides anything, since some entries bundle a few sub-models with different year spans and a hidden row would mean you couldn't find the right one.</p>
     <button class="btn" id="checkBtn" onclick="runCheck()">Check this job</button>
   </div>
 
@@ -1528,11 +1528,16 @@ function yearMatches(i, year){
   return year >= r.min && year <= r.max;
 }
 
+// Make is a precise filter (a DB entry either is or isn't that make) — Year is a derived,
+// approximate value, so it must never remove a model from the list, only push likely
+// matches to the top. Hiding an entry because our extracted year range was slightly off
+// would make the right vehicle impossible to select — worse than not filtering at all.
 function modelCandidateIndices(){
-  return DB_SORTED.filter(i =>
-    (!selectedMake || DB[i].make === selectedMake) &&
-    yearMatches(i, selectedYear)
-  );
+  const forMake = DB_SORTED.filter(i => !selectedMake || DB[i].make === selectedMake);
+  if(selectedYear === null) return forMake;
+  const matching = forMake.filter(i => yearMatches(i, selectedYear));
+  const rest = forMake.filter(i => !yearMatches(i, selectedYear));
+  return matching.concat(rest);
 }
 
 function fillDatalist(el, values){
@@ -1545,10 +1550,9 @@ function fillDatalist(el, values){
 }
 
 function refreshMakeList(){
-  const candidateMakes = selectedYear === null
-    ? makes
-    : makes.filter(m => DB_SORTED.some(i => DB[i].make === m && yearMatches(i, selectedYear)));
-  fillDatalist(makeList, candidateMakes);
+  // Every make is always selectable — Year only reorders the Model list once a make is
+  // picked (see modelCandidateIndices), it never removes a make or model from the list.
+  fillDatalist(makeList, makes);
 }
 
 function refreshYearList(){
@@ -1577,12 +1581,8 @@ function selectVehicle(dbIndex){
   selectedIndex = dbIndex;
   makeInput.value = entry.make;
   modelInput.value = entry.model;
-  const r = DB_YEARS[dbIndex];
-  if(selectedYear === null || !yearMatches(dbIndex, selectedYear)){
-    // leave Year untouched if it already matches (don't clear a filter the user set
-    // deliberately); only reset it when it's unset or would now exclude this vehicle.
-    if(selectedYear !== null) { selectedYear = null; yearInput.value = ''; }
-  }
+  // Year is left exactly as the user had it — it's just a sort hint on the Model list
+  // now, never an exclusion filter, so there's nothing here for it to conflict with.
   refreshMakeList();
   refreshYearList();
   refreshModelList();
@@ -1610,11 +1610,9 @@ yearInput.addEventListener('input', () => {
   const newYear = valid ? n : null;
   if(newYear !== selectedYear){
     selectedYear = newYear;
-    if(selectedIndex !== '' && !yearMatches(selectedIndex, selectedYear)){
-      selectedIndex = '';
-      modelInput.value = '';
-    }
-    refreshMakeList();
+    // Year only reorders the Model list (see modelCandidateIndices) — it never excludes
+    // anything, so a Model already picked stays picked even if the typed Year doesn't
+    // match its range.
     refreshModelList();
   }
 });
