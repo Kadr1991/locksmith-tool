@@ -101,6 +101,15 @@
   .syncbar.err .dot{background:#ef4444;}
   .qtyrow-zero{opacity:.55;}
   .invsection-hint{color:var(--sub); font-size:12px; margin:0 0 12px;}
+  .covsearch{width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; margin-bottom:4px; font-family:Arial, Helvetica, sans-serif;}
+  .covtable{font-size:12.5px;}
+  .covtable th{white-space:nowrap;}
+  .covtable td{vertical-align:middle;}
+  .covtable td.covmake{font-weight:bold; white-space:nowrap;}
+  .covtable td.covmodel{min-width:220px;}
+  .covtable tr.covhidden{display:none;}
+  .covgo{background:var(--panel); border:1px solid var(--accent); color:var(--accent); border-radius:6px; padding:5px 10px; font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap; font-family:Arial, Helvetica, sans-serif;}
+  .covgo:hover{background:var(--accent); color:#fff;}
 </style>
 </head>
 <body>
@@ -113,6 +122,7 @@
   <nav class="tabs">
     <button class="tabbtn active" data-tab="checker" onclick="switchTab('checker')">🔑 Job Checker</button>
     <button class="tabbtn" data-tab="inventory" onclick="switchTab('inventory')">📦 Inventory</button>
+    <button class="tabbtn" data-tab="coverage" onclick="switchTab('coverage')">📖 Coverage</button>
   </nav>
 
   <div id="tab-checker" class="tabpanel active">
@@ -223,6 +233,28 @@
       <table class="invtable" id="invTools"><thead><tr><th>Item</th><th>Description</th><th>Qty</th></tr></thead><tbody></tbody></table>
     </div>
   </div><!-- /tab-inventory -->
+
+  <div id="tab-coverage" class="tabpanel">
+    <div class="card">
+      <h2>📖 Vehicle Coverage (A–Z)</h2>
+      <p class="hint">Every UK-market make/model/generation in this tool's database, alphabetical by make then model, with Autel IM508S and Xhorse Key Tool Plus coverage for both add-key and all-keys-lost side by side. Same underlying data as the Job Checker — this is just the full list to scan or search instead of picking one vehicle at a time.</p>
+      <input type="text" id="coverageSearch" class="covsearch" placeholder="Filter by make or model… e.g. &quot;BMW&quot;, &quot;Transit&quot;, &quot;bench&quot;">
+      <p class="invsection-hint" id="coverageCount"></p>
+    </div>
+    <div class="card" style="padding:0; overflow-x:auto;">
+      <table class="invtable covtable" id="coverageTable">
+        <thead>
+          <tr>
+            <th>Make</th><th>Model / generation</th><th>Method</th>
+            <th>Add key<br>Autel</th><th>Add key<br>Xhorse</th>
+            <th>All keys lost<br>Autel</th><th>All keys lost<br>Xhorse</th><th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p class="hint" id="coverageEmpty" style="display:none; padding:14px 16px;">No matches — try a different make/model spelling.</p>
+    </div>
+  </div><!-- /tab-coverage -->
 
 </div>
 
@@ -1364,10 +1396,76 @@ function switchTab(name){
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   const checkerPanel = document.getElementById('tab-checker');
   const invPanel = document.getElementById('tab-inventory');
+  const covPanel = document.getElementById('tab-coverage');
   if(checkerPanel) checkerPanel.classList.toggle('active', name === 'checker');
   if(invPanel) invPanel.classList.toggle('active', name === 'inventory');
+  if(covPanel) covPanel.classList.toggle('active', name === 'coverage');
 }
 window.switchTab = switchTab;
+
+// ---------------- Coverage tab: full A-Z database listing ----------------
+// Same DB, same covChip()/method fields the Job Checker uses — just laid out as one
+// scannable, filterable list instead of picked one vehicle at a time.
+const COVERAGE_ROWS = DB
+  .map((d, i) => ({ d, i }))
+  .sort((a, b) => (a.d.make + ' ' + a.d.model).localeCompare(b.d.make + ' ' + b.d.model));
+
+function goToChecker(dbIndex){
+  switchTab('checker');
+  const entry = DB[dbIndex];
+  makeSel.value = entry.make;
+  makeSel.dispatchEvent(new Event('change'));
+  modelSel.value = String(dbIndex);
+  runCheck();
+}
+window.goToChecker = goToChecker;
+
+function renderCoverageTable(){
+  const body = document.querySelector('#coverageTable tbody');
+  if(!body) return;
+  body.innerHTML = '';
+  COVERAGE_ROWS.forEach(({ d, i }) => {
+    const tr = document.createElement('tr');
+    tr.dataset.search = (d.make + ' ' + d.model + ' ' + d.add.method + ' ' + d.akl.method).toLowerCase();
+    const goCell = document.createElement('td');
+    const goBtn = document.createElement('button');
+    goBtn.type = 'button'; goBtn.className = 'covgo'; goBtn.textContent = 'Check this →';
+    goBtn.addEventListener('click', () => goToChecker(i));
+    goCell.appendChild(goBtn);
+    tr.innerHTML =
+      '<td class="covmake">' + d.make + '</td>' +
+      '<td class="covmodel">' + d.model + '</td>' +
+      '<td>' + d.add.method + (d.add.method !== d.akl.method ? ' / ' + d.akl.method + ' (AKL)' : '') + '</td>' +
+      '<td>' + covChip(d.add.autel) + '</td>' +
+      '<td>' + covChip(d.add.xhorse) + '</td>' +
+      '<td>' + covChip(d.akl.autel) + '</td>' +
+      '<td>' + covChip(d.akl.xhorse) + '</td>';
+    tr.appendChild(goCell);
+    body.appendChild(tr);
+  });
+  const countEl = document.getElementById('coverageCount');
+  if(countEl) countEl.textContent = COVERAGE_ROWS.length + ' makes/models/generations listed.';
+  filterCoverageTable();
+}
+
+function filterCoverageTable(){
+  const input = document.getElementById('coverageSearch');
+  const q = (input ? input.value : '').trim().toLowerCase();
+  const rows = document.querySelectorAll('#coverageTable tbody tr');
+  let visible = 0;
+  rows.forEach(tr => {
+    const match = !q || tr.dataset.search.includes(q);
+    tr.classList.toggle('covhidden', !match);
+    if(match) visible++;
+  });
+  const emptyEl = document.getElementById('coverageEmpty');
+  if(emptyEl) emptyEl.style.display = (visible === 0 && rows.length) ? 'block' : 'none';
+  const countEl = document.getElementById('coverageCount');
+  if(countEl) countEl.textContent = q ? (visible + ' of ' + rows.length + ' match "' + input.value.trim() + '".') : (rows.length + ' makes/models/generations listed.');
+}
+const coverageSearchInput = document.getElementById('coverageSearch');
+if(coverageSearchInput) coverageSearchInput.addEventListener('input', filterCoverageTable);
+renderCoverageTable();
 
 // ---------------- UI wiring ----------------
 const makes = [...new Set(DB.map(d => d.make))];
