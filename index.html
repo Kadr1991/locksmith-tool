@@ -235,8 +235,8 @@
     </div>
 
     <div class="card">
-      <h2>Bench adapters</h2>
-      <p class="invsection-hint">Your GoDiag and Xhorse solder-free adapter kit. The Job Checker cross-checks these against bench-job vehicle entries where a specific platform/adapter match is confirmed — see the "Bench equipment" line in a bench-job result.</p>
+      <h2>Adapters &amp; OBD cables</h2>
+      <p class="invsection-hint">Your GoDiag/Xhorse solder-free bench adapters plus the OBD-side dongles, cables and simulators (APB112, XP400, G-Box, KM100, etc.) some jobs need beyond the base tablet. The Job Checker cross-checks these against both bench-job and OBD-job vehicle entries where a specific adapter is named — see the "Bench equipment" / "OBD adapter/cable" lines in a job result.</p>
       <table class="invtable" id="invAdapters"><thead><tr><th>Item</th><th>Description</th><th>Qty</th></tr></thead><tbody></tbody></table>
     </div>
 
@@ -429,7 +429,7 @@ const DB = [
   { make:"Ford", model:"Transit Custom / Transit Connect (2012/2013–2023, pre-facelift)", models:["Transit Custom","Transit Connect"],
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
-    akl:{method:"OBD", autel:"yes", xhorse:"partial"},
+    akl:{method:"OBD", autel:"yes", xhorse:"partial", obdKit:["xdfaklgl"]},
     note:"Xhorse sells a dedicated 'Ford All Keys Lost Cable with Active Alarm' (XDFAKLGL) for 2016–2021 Ford smart-key vehicles, explicitly Key Tool Plus compatible, no soldering — the right accessory to stock for this job. Later years may hit the AutoAuth gateway — check live." },
   { make:"Ford", model:"Transit / Transit Custom (2019/2020+ facelift, current)", models:["Transit","Transit Custom"],
     blade:"HU101 (HU198-pinned lock likely from ~2017+ builds — verify Lishi pick)", lishi:"HU101 (may need HU198-spec pick)", lishiOwned:"yes",
@@ -557,12 +557,12 @@ const DB = [
     note:"Do not assume Crafter = same blade/procedure as Transporter/Caddy — it uses a dedicated dashboard immobiliser with its own HU64 blade (also sold as HU116 by some suppliers), different from both Golf/Passat and the Transporter/Caddy family." },
   { make:"VW/Audi/Seat/Skoda", model:"MQB48 — VW/Audi (Golf 7, Passat B8, A3 8V, Q2, TT 8S, S3/RS3, 2013–2020)", models:["Golf","Passat","A3","Q2","TT","S3","RS3"],
     blade:"HU66 (blade-key) / HU162T-9 (VW, smart-key) / HU162T-10 (Audi, smart-key)", lishi:"HU66 / HU162T-9 / HU162T-10", lishiOwned:"yes",
-    add:{method:"OBD (needs security token/APB300 or XP400 Pro)", autel:"yes", xhorse:"partial"},
+    add:{method:"OBD (needs security token/APB300 or XP400 Pro)", autel:"yes", xhorse:"partial", obdKit:["apb300","autel_xp400","xhorse_mqb48_token"]},
     akl:{method:"OBD possible on VW/Audi blade-key + Megamos AES models specifically (2023+ Autel update) — otherwise bench", autel:"partial", xhorse:"partial"},
     note:"VW and Audi have a genuine OBD-based AKL path on Autel that Skoda/Seat currently lack (see their own entries below) — this is a real make-specific advantage worth knowing before you quote a job." },
   { make:"VW/Audi/Seat/Skoda", model:"MQB48 — Skoda/Seat (Octavia III, Superb III, Kodiaq, Karoq, Leon 5F, Ateca, Arona, 2012/2013–2020)", models:["Octavia","Superb","Kodiaq","Karoq","Leon","Ateca","Arona"],
     blade:"HU66 (blade-key) / HU162T-9 (smart-key, same 9-cut as VW)", lishi:"HU66 / HU162T-9", lishiOwned:"yes",
-    add:{method:"OBD (Autel/Xhorse both name Skoda/Seat in base coverage)", autel:"yes", xhorse:"partial"},
+    add:{method:"OBD (Autel/Xhorse both name Skoda/Seat in base coverage)", autel:"yes", xhorse:"partial", obdKit:["xhorse_mqb48_token"]},
     akl:{method:"Bench required — a 2023-era Autel update explicitly excluded Skoda/Seat from the OBD-AKL route that VW/Audi got", autel:"partial", xhorse:"partial"},
     note:"Skoda/Seat MQB AKL should be flagged as 'bench required' with higher confidence than VW/Audi AKL, which may succeed via OBD. Xhorse's bench MQB48 route is arguably Skoda's best-supported AKL path of the two tools." },
   { make:"VW/Audi/Seat/Skoda", model:"MQB Gen2/IMMO5C (RH850) — Tiguan Mk2 facelift, Polo (2018+), T-Roc (2020+)", models:["Tiguan","Polo","T-Roc"],
@@ -727,7 +727,7 @@ const DB = [
   { make:"Toyota/Lexus", model:"Aygo / Citroën C1 / Peugeot 107-108 — Gen 2 (2014–2020, same PSA-shared platform)", models:["Aygo"],
     blade:"TOY48", lishi:"TOY48 (can also decode wafers directly off the lock if no keys present)", lishiOwned:"yes",
     add:{method:"Likely simpler if a working key exists", autel:"check", xhorse:"check"},
-    akl:{method:"Not a clean OBD job — Autel needs G-Box + KM100 + dash access (semi-bench); Xhorse route documented uses VVDI Prog + Tango, not Key Tool Plus alone", autel:"partial", xhorse:"check"},
+    akl:{method:"Not a clean OBD job — Autel needs G-Box + KM100 + dash access (semi-bench); Xhorse route documented uses VVDI Prog + Tango, not Key Tool Plus alone", autel:"partial", xhorse:"check", obdKit:["gbox2","km100"]},
     note:"Chip caveat: only original 4D70 chips work reliably — Xhorse Super Chip XT27A / VVDI2 4D70-clone chips reportedly fail on this platform (workaround: program one original key via Tango, then clone to XT27)." },
   { make:"Toyota/Lexus", model:"Proace (2013+, rebadged Peugeot Expert/Citroën Jumpy-Dispatch)", models:["Proace"],
     blade:"Unconfirmed — do NOT use a TOYxx code, expect PSA-family (HU83/VA2/NE73-style)", lishi:"Unconfirmed — likely a PSA-family pick, not a Toyota one", lishiOwned:"no",
@@ -751,8 +751,8 @@ const DB = [
     note:"Mostly fine on OBD; a few of the very newest models need extra password calculation — check the specific model year. Lexus shares this exact chip-generation timing with Toyota, no offset." },
   { make:"Toyota/Lexus", model:"Newest 2018+ vertical-milling / 8A generation (RAV4 off-road, newer Land Cruiser/Hilux, Camry, Highlander, Sienna, Corolla, Levin, Venza, Lexus RX/NX/ES/IS/LS/LX)", models:["RAV4","Land Cruiser","Hilux","Camry","Highlander","Sienna","Corolla","Levin","Venza","RX","NX","ES","IS","LS","LX"],
     blade:"TOY48-style insert (the 'TOY2018'/'TOY2' naming could not be independently verified as a real industry-standard code distinct from TOY48 — treat as unconfirmed)", lishi:"TOY48 / TOY2018 / TOY2 (verify exact cut before ordering)", lishiOwned:"yes",
-    add:{method:"OBD, adapter-dependent — Autel needs 8A cable + G-Box3 + APB112; Xhorse needs XDBASK/XD8ASKGL adapter", autel:"partial", xhorse:"partial"},
-    akl:{method:"OBD-with-adapter, same accessories as add-key", autel:"partial", xhorse:"partial"},
+    add:{method:"OBD, adapter-dependent — Autel needs 8A cable + G-Box3 + APB112; Xhorse needs XDBASK/XD8ASKGL adapter", autel:"partial", xhorse:"partial", obdKit:["gbox3","apb112","xdbask"]},
+    akl:{method:"OBD-with-adapter, same accessories as add-key", autel:"partial", xhorse:"partial", obdKit:["gbox3","apb112","xdbask"]},
     note:"2018+ vertical-milling Toyota keys need a different pick to the standard TOY43/TOY48 — confirm cut style physically before you commit to a blank." },
 
   // ================= HONDA / ACURA =================
@@ -932,7 +932,7 @@ const DB = [
   { make:"Hyundai/Kia", model:"2017/2019+ smart-key range (Ioniq, Tucson NX4, Santa Fe TM/MX5, Kona, Sportage QL/NQ5, Sorento MQ4, Niro/Niro EV, Kia Stinger/K900/Carnival)", models:["Ioniq","Tucson","Santa Fe","Kona","Sportage","Sorento","Niro","Stinger","K900","Carnival"],
     blade:"KK12 (emergency insert)", lishi:"KK12 — NOT in your current 32-item Lishi kit, order before a job needing decoding", lishiOwned:"no",
     add:{method:"OBD", autel:"yes", xhorse:"check"},
-    akl:{method:"OBD — but Autel has a documented failure mode on this generation ('smart key condition not met'); workaround is Diagnostics→Hot Functions→IMMO Keys→SMK→Add a Key instead of the normal IMMO wizard. Sportage 2022-2024 AKL may need a KM100 emulator paired with the IM508/IM608, not the tablet alone.", autel:"yes", xhorse:"check"},
+    akl:{method:"OBD — but Autel has a documented failure mode on this generation ('smart key condition not met'); workaround is Diagnostics→Hot Functions→IMMO Keys→SMK→Add a Key instead of the normal IMMO wizard. Sportage 2022-2024 AKL may need a KM100 emulator paired with the IM508/IM608, not the tablet alone.", autel:"yes", xhorse:"check", obdKit:["km100"]},
     note:"⚠ CRITICAL CORRECTION to the prior data — KK12 is the blade fitted to essentially the entire modern Hyundai/Kia/Genesis smart-key range from ~2017-2019 onward, not HY22 (which is the older 2009-2014 transition blade — see separate entry above)." },
   { make:"Hyundai/Kia", model:"E-GMP dedicated EV platform — Ioniq 5 (2022+), EV6 (2021+)", models:["Ioniq 5","EV6"],
     blade:"KK12 (emergency insert, confirmed on parts listings)", lishi:"KK12 — not in your kit", lishiOwned:"no",
@@ -968,8 +968,8 @@ const DB = [
     note:"IMPORTANT — blade choice on this generation is model-specific, not simply year-specific; verify by model. Same VA2T Lishi pick also fits Vauxhall/Opel Movano (2011-2024) and Vivaro (2014-2024) door locks, useful cross-reference." },
   { make:"Peugeot/Citroen", model:"208/2008/308/408/508/3008/5008/Partner/Rifter/Traveller, Berlingo, C3/C3 Aircross/C4/C4X/C5/C5X/C5 Aircross, Jumpy/SpaceTourer — newest '4A' generation (2018–2026, incl. e- variants)", models:["208","2008","308","408","508","3008","5008","Partner","Rifter","Traveller","Berlingo","C3","C3 Aircross","C4","C4X","C5","C5X","C5 Aircross","Jumpy","SpaceTourer"],
     blade:"Unconfirmed exact mechanical blade — likely HU83 emergency backup, verify physically", lishi:"Unconfirmed", lishiOwned:"no",
-    add:{method:"OBD, with adapter — requires XP400/XP400 Pro/XP1 Pro + Autel universal keys + APB112 smart key simulator, not a bare-tablet job", autel:"yes", xhorse:"check"},
-    akl:{method:"OBD, with adapter — same hardware requirement", autel:"yes", xhorse:"check"},
+    add:{method:"OBD, with adapter — requires XP400/XP400 Pro/XP1 Pro + Autel universal keys + APB112 smart key simulator, not a bare-tablet job", autel:"yes", xhorse:"check", obdKit:["autel_xp400","apb112"]},
+    akl:{method:"OBD, with adapter — same hardware requirement", autel:"yes", xhorse:"check", obdKit:["autel_xp400","apb112"]},
     note:"Good news item — Autel explicitly lists Add Key + AKL support for this entire 2018-2026 range, a large chunk of current UK PSA fleet, but budget for the extra hardware beyond the base IM508S." },
   { make:"Peugeot/Citroen", model:"Boxer/Relay (shared with Fiat Ducato) — 2006-2023+, Fiat-designed van platform NOT PSA BSI", models:["Boxer","Relay"],
     blade:"SIP22", lishi:"SIP22", lishiOwned:"no",
@@ -988,8 +988,8 @@ const DB = [
     note:"DS was a Citroen sub-brand until 2015 — not directly confirmed for DS-badged cars specifically." },
   { make:"DS Automobiles", model:"DS 3 Crossback, DS 4 (2021+), DS 6, DS 7, DS 8, DS 9 — standalone brand, 2018-2026", models:["DS 3 Crossback","DS 4","DS 6","DS 7","DS 8","DS 9"],
     blade:"Unconfirmed, verify physically", lishi:"Unconfirmed", lishiOwned:"no",
-    add:{method:"OBD with adapter — DS explicitly named alongside Citroën in the same Autel 4A bulletin, needs XP400/XP1 Pro + APB112", autel:"yes", xhorse:"check"},
-    akl:{method:"OBD with adapter, same hardware requirement", autel:"yes", xhorse:"check"},
+    add:{method:"OBD with adapter — DS explicitly named alongside Citroën in the same Autel 4A bulletin, needs XP400/XP1 Pro + APB112", autel:"yes", xhorse:"check", obdKit:["autel_xp400","apb112"]},
+    akl:{method:"OBD with adapter, same hardware requirement", autel:"yes", xhorse:"check", obdKit:["autel_xp400","apb112"]},
     note:"Confirmed part of the same PSA/Stellantis 4A smart-key list as Peugeot/Citroen 4A generation." },
 
   // ================= RENAULT / DACIA =================
@@ -1000,7 +1000,7 @@ const DB = [
     note:"VA2T is real for these specific small/older Renault models — but do NOT extend it to Megane/Scenic/Captur/Kadjar/Talisman (see below, different blade)." },
   { make:"Renault", model:"2010+ UCH generation — Clio III/IV, Megane III/IV, Scenic III, Captur I (2013-2019), Kadjar, Talisman, Espace V", models:["Clio","Megane","Scenic","Captur","Kadjar","Talisman","Espace"],
     blade:"VAC102 (correction — not VA2T, which only covers the older small-Renault line above)", lishi:"VAC102 (or HU136 — cutover point unconfirmed, verify physically)", lishiOwned:"no",
-    add:{method:"OBD — confirmed (Clio IV 2018 add-key success with IM508+XP400)", autel:"yes", xhorse:"check"},
+    add:{method:"OBD — confirmed (Clio IV 2018 add-key success with IM508+XP400)", autel:"yes", xhorse:"check", obdKit:["autel_xp400"]},
     akl:{method:"⚠ NOT AVAILABLE on current Autel tool versions — Autel removed the Renault/Dacia AKL function in a software update; some older-model AKL success stories exist (e.g. 2016 Talisman) but current capability should be treated as unavailable pending restoration", autel:"no", xhorse:"check"},
     note:"Do not promise Renault AKL on the Autel IM508S without checking the current firmware/function list first — this directly hardens the prior flagged concern. You don't stock the VAC102/HU136 blade or pick." },
   { make:"Renault", model:"Trafic III/Master III (2014+, shared with Vauxhall/Opel Vivaro/Movano, Nissan NV300/NV400)", models:["Trafic","Master"],
@@ -1011,19 +1011,19 @@ const DB = [
   { make:"Renault", model:"Newest — Clio V (2019+), Captur II (2019+), Zoe (2019+) — Safety Gateway (SGW)", models:["Clio","Captur","Zoe"],
     blade:"Unconfirmed — expect a newer laser/proximity emergency blade, possibly HU166/HU179 family, not confirmed for this exact generation", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"OBD, partial", autel:"partial", xhorse:"check"},
-    akl:{method:"⚠ NOT SUPPORTED — a Safety Gateway blocks generic OBD scanners without a manufacturer-specific bypass adapter that neither Autel nor Xhorse currently has an equivalent for. OBDSTAR's proprietary 16+32 gateway cable is the currently-documented tool that can do this job", autel:"no", xhorse:"no"},
+    akl:{method:"⚠ NOT SUPPORTED — a Safety Gateway blocks generic OBD scanners without a manufacturer-specific bypass adapter that neither Autel nor Xhorse currently has an equivalent for. OBDSTAR's proprietary 16+32 gateway cable is the currently-documented tool that can do this job", autel:"no", xhorse:"no", obdKit:["obdstar_gateway_cable"]},
     note:"⚠ The single most important finding for newest-Renault tool-buying decisions — flag this generation as 'cannot currently AKL with your existing kit, subcontract or acquire OBDSTAR for this specific job.'" },
   { make:"Dacia", model:"Sandero/Duster/Logan (all generations, particularly 2012+ Sandero II/Duster I-II/Logan II — Renault B0/CMF-B platform)", models:["Sandero","Duster","Logan"],
     blade:"Unconfirmed exact code — likely VAC102 family per Renault parts-sharing, not independently confirmed", lishi:"Unconfirmed — likely VAC102/HU136 family", lishiOwned:"no",
     add:{method:"OBD — Autel confirmed for PIN/dump extraction via HFM read", autel:"yes", xhorse:"check"},
-    akl:{method:"⚠ Autel IM508S ALONE CANNOT COMPLETE THIS — it can only read the HFM EEPROM/flash dump and extract the 28-digit PIN; a second tool (OBDSTAR X300 Classic G3) is required to actually write the AKL and program the key", autel:"partial", xhorse:"check"},
+    akl:{method:"⚠ Autel IM508S ALONE CANNOT COMPLETE THIS — it can only read the HFM EEPROM/flash dump and extract the 28-digit PIN; a second tool (OBDSTAR X300 Classic G3) is required to actually write the AKL and program the key", autel:"partial", xhorse:"check", obdKit:["obdstar_x300cg3"]},
     note:"Plan for a two-tool workflow (Autel for PIN extraction + OBDSTAR for the write) on Dacia AKL jobs, or expect to turn the job away/subcontract until Autel restores the function — directly fills what was previously a total gap in the database." },
 
   // ================= FIAT / LANCIA / ALFA ROMEO / JEEP-CHRYSLER-DODGE =================
   { make:"Fiat/Lancia", model:"Panda / Punto / 500 (2003–2015) / Doblo (old-shape, 2000+) / Ducato (2002+) / Fiorino / Bravo / Grande Punto — older BSI", models:["Panda","Punto","500","Doblo","Ducato","Fiorino","Bravo","Grande Punto"],
     blade:"SIP22", lishi:"SIP22", lishiOwned:"no",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
-    akl:{method:"OBD, confirmed working (not just 'usually') — 2011 and 2013 Fiat 500 AKL both confirmed successful with IM508/IM608 + XP400 Pro", autel:"yes", xhorse:"yes"},
+    akl:{method:"OBD, confirmed working (not just 'usually') — 2011 and 2013 Fiat 500 AKL both confirmed successful with IM508/IM608 + XP400 Pro", autel:"yes", xhorse:"yes", obdKit:["autel_xp400"]},
     note:"Coverage is better than 'patchy' — treat this generation's AKL as a solid OBD job for both tools. Field warning: you MUST select 'relearn all keys' on add-key or existing keys get wiped. You stock the SIP22 blade but not the matching Lishi pick — order one before a job that needs decoding." },
   { make:"Fiat/Lancia", model:"500X / Tipo (2015+) / old-shape Doblo continuing production", models:["500X","Tipo","Doblo"],
     blade:"SIP22 / HU83 (model dependent)", lishi:"SIP22 / HU83", lishiOwned:"close",
@@ -1032,8 +1032,8 @@ const DB = [
     note:"Post-2015 Fiat vans/models built on shared PSA platforms behave like Peugeot/Citroen for AKL. You own the HU83 pick but not SIP22 — check which this specific model needs. 500X specifically also intersects the FN022 Abrites note below for 2020+ facelifts." },
   { make:"Fiat/Lancia", model:"New-shape Doblo (2022+) — rebadged Stellantis PSA van, NOT the old Fiat-designed Doblo", models:["Doblo"],
     blade:"Unconfirmed — follow the Citroen/Peugeot 4A generation entry, do NOT assume SIP22", lishi:"Unconfirmed — do not pull SIP22 stock without checking VIN/body style first", lishiOwned:"no",
-    add:{method:"Same as Peugeot/Citroen 4A generation entries (Autel yes via XP400/APB112 kit)", autel:"yes", xhorse:"check"},
-    akl:{method:"Same as Peugeot/Citroen 4A generation entries", autel:"yes", xhorse:"check"},
+    add:{method:"Same as Peugeot/Citroen 4A generation entries (Autel yes via XP400/APB112 kit)", autel:"yes", xhorse:"check", obdKit:["autel_xp400","apb112"]},
+    akl:{method:"Same as Peugeot/Citroen 4A generation entries", autel:"yes", xhorse:"check", obdKit:["autel_xp400","apb112"]},
     note:"⚠ Significant trap for a locksmith assuming 'Fiat = SIP22' — mechanically identical to the new Citroën Berlingo/Peugeot Rifter/Vauxhall Combo E (EMP2/CMP van platform). Check body style/VIN before pulling SIP22 stock." },
   { make:"Fiat/Lancia", model:"Lancia (any model) — negligible current UK relevance", models:["Lancia (various)"],
     blade:"Unconfirmed — verify physically, treat pre-1994 classics as old-Fiat architecture (SIP22-era pattern) and Lancia Voyager (2011-2014) as Chrysler/Fiat Grand Voyager architecture", lishi:"Unconfirmed", lishiOwned:"no",
@@ -1265,6 +1265,16 @@ const EQUIPMENT_CATALOG = {
   xdnp29: { cat:'adapter', label:'Xhorse XDNP29', desc:'Volvo CEM-2 adapter.', defaultQty:1 },
   xdkp30: { cat:'adapter', label:'Xhorse XDKP30 Multi-function Adapter', desc:'Multi-function bench adapter.', defaultQty:1 },
   vvdi_prog_ezs: { cat:'adapter', label:'Xhorse VVDI Prog EZS Adapter set (SO453, 10pcs)', desc:'Benz EIS/EZS bench adapter — works with Key Tool Plus, VVDI Prog, Multi Prog, Mini Prog, VVDI MB.', defaultQty:10 },
+  // ---- OBD-side adapters/cables/simulators (beyond the bare IM508S/KTP tablet) ----
+  apb112: { cat:'adapter', label:'Autel APB112 Smart Key Simulator', desc:'Required alongside XP400/XP400 Pro on several current PSA/Stellantis "4A" and Toyota/Lexus 8A OBD jobs — not bundled with the base IM508S.', defaultQty:0 },
+  apb300: { cat:'adapter', label:'Autel APB300 Security Token / IMMO Key Simulator', desc:'Named as an alternative to XP400 Pro for the VW/Audi MQB48 OBD add-key job.', defaultQty:0 },
+  gbox2: { cat:'adapter', label:'Autel G-Box2', desc:'Semi-bench/dash-access accessory — used with KM100 on the Toyota/Lexus Aygo/C1/107 Gen 2 all-keys-lost job.', defaultQty:0 },
+  gbox3: { cat:'adapter', label:'Autel G-Box3', desc:'Used with the 8A cable + APB112 on the newest 2018+ Toyota/Lexus vertical-milling/8A generation.', defaultQty:0 },
+  km100: { cat:'adapter', label:'Autel/Lonsdor KM100 remote-control/PIN emulator', desc:'Paired with the IM508/IM608 (not the tablet alone) for the Toyota Aygo/C1/107 Gen 2 AKL and some 2022-2024 Kia Sportage AKL jobs.', defaultQty:0 },
+  xdbask: { cat:'adapter', label:'Xhorse XDBASK / XD8ASKGL 8A adapter', desc:'Xhorse-side equivalent of Autel’s 8A cable + G-Box3 kit for the newest 2018+ Toyota/Lexus 8A generation.', defaultQty:0 },
+  xdfaklgl: { cat:'adapter', label:'Xhorse Ford All Keys Lost Cable with Active Alarm (XDFAKLGL)', desc:'Solder-free, Key Tool Plus-compatible — the documented accessory for 2016–2021 Ford Transit Custom/Connect smart-key all-keys-lost.', defaultQty:0 },
+  obdstar_gateway_cable: { cat:'adapter', label:'OBDSTAR 16+32 Gateway Bypass Cable', desc:'Third-party tool, NOT part of your Autel/Xhorse kit — currently the only documented way past the Safety Gateway on newest Renault (Clio V/Captur II/Zoe) all-keys-lost. Would need to be bought separately or the job subcontracted.', defaultQty:0 },
+  obdstar_x300cg3: { cat:'adapter', label:'OBDSTAR X300 Classic G3', desc:'Third-party second tool, NOT part of your Autel/Xhorse kit — required to write the key after the Autel IM508S extracts the PIN on a Dacia Sandero/Duster/Logan all-keys-lost job.', defaultQty:0 },
   autel_im508s: { cat:'tool', label:'Autel MaxiIM IM508S', desc:'Base key programming/diagnostic tablet.', defaultQty:1 },
   xhorse_ktp: { cat:'tool', label:'Xhorse VVDI Key Tool Plus Pad (SK305, Advance GL / Full configuration)', desc:'Core Xhorse key programmer.', defaultQty:1 },
   autel_xp400: { cat:'tool', label:'Autel XP400', desc:'Key programming reader/EEPROM adapter used alongside the IM508S. Not confirmed which exact variant ("Pro" or standard) you hold.', defaultQty:1 },
@@ -1643,6 +1653,7 @@ function runCheck(){
   const lishiOwned = entry.lishiOwned || "no"; // "yes" | "close" | "no", authored per vehicle from your real Lishi list
 
   const isBench = j.method.toLowerCase().includes('bench');
+  const isObd = j.method.toLowerCase().includes('obd');
   const isDealer = j.method.toLowerCase().includes('dealer');
 
   let stockHtml = '';
@@ -1682,6 +1693,26 @@ function runCheck(){
       stockHtml += stockLine('Bench equipment for this platform', false, 'Not yet mapped in this tool — check the Inventory tab manually for the right adapter/test platform');
     }
   }
+  let obdKitAllOwned = true;
+  let obdKitMapped = true;
+  if(isObd){
+    if(j.obdKit && j.obdKit.length){
+      j.obdKit.forEach(id => {
+        const item = EQUIPMENT_CATALOG[id];
+        const qty = INVENTORY.equipment[id] || 0;
+        const label = item ? item.label : id;
+        if(qty > 0){
+          stockHtml += stockLine('OBD adapter/cable: ' + label, true, 'Owned — qty ' + qty);
+        } else {
+          obdKitAllOwned = false;
+          stockHtml += stockLine('OBD adapter/cable: ' + label, false, 'Not owned — order' + (item && item.desc ? ' (' + item.desc + ')' : '') + ' before quoting this job');
+        }
+      });
+    } else {
+      obdKitMapped = false;
+      stockHtml += stockLine('OBD adapter/cable', true, 'No specific adapter identified beyond the base Autel IM508S / Xhorse Key Tool Plus tablet for this job — verify the live function list in-app in case that changes.');
+    }
+  }
   document.getElementById('stockList').innerHTML = stockHtml;
 
   // ---- Xhorse universal remote matches ----
@@ -1709,15 +1740,16 @@ function runCheck(){
   const lishiCloseOnly = (lishiOwned === 'close');
   const toolsMissing = (!autelOwned && !xhorseOwned);
   const benchEquipMissing = isBench && !benchAllOwned;
+  const obdKitMissing = isObd && obdKitMapped && !obdKitAllOwned;
 
   if(isDealer || coverageBad || toolsMissing){
     box.classList.add('bad'); icon.textContent = '🔴';
     head.textContent = 'Likely DECLINE / refer on';
     body.textContent = toolsMissing ? 'Neither programmer is marked as owned in your Inventory tab — confirm your equipment before quoting.' : 'Current aftermarket coverage for this platform is weak or dealer-only. Don\'t commit to a customer without confirming a route to completion first.';
-  } else if(coverageUnclear || bladeMissing || lishiMissing || lishiCloseOnly || isBench){
+  } else if(coverageUnclear || bladeMissing || lishiMissing || lishiCloseOnly || isBench || obdKitMissing){
     box.classList.add('warn'); icon.textContent = '🟡';
     head.textContent = 'CAUTION — verify before accepting';
-    body.textContent = (benchEquipMissing ? 'This is a bench job and your Inventory tab shows you\'re missing (or haven\'t mapped) the equipment it needs — check the Bench equipment line above before quoting. ' : (isBench ? 'This is a bench job — your Inventory tab shows you hold the mapped equipment, but double-check the exact module/variant before quoting. ' : '')) + (bladeMissing ? 'The blade isn\'t in your tracked stock. ' : '') + (lishiMissing ? 'You don\'t have the matching Lishi pick — order/borrow one if the job needs picking or decoding. ' : '') + (lishiCloseOnly ? 'Your Lishi pick is a close match, not exact — confirm it fits before you cut. ' : '') + (coverageUnclear ? 'Tool coverage is partial or platform-dependent — check the live function list in-app.' : '');
+    body.textContent = (benchEquipMissing ? 'This is a bench job and your Inventory tab shows you\'re missing (or haven\'t mapped) the equipment it needs — check the Bench equipment line above before quoting. ' : (isBench ? 'This is a bench job — your Inventory tab shows you hold the mapped equipment, but double-check the exact module/variant before quoting. ' : '')) + (obdKitMissing ? 'This OBD job needs an adapter/cable you don\'t currently have marked as owned — check the OBD adapter/cable line(s) above before quoting. ' : '') + (bladeMissing ? 'The blade isn\'t in your tracked stock. ' : '') + (lishiMissing ? 'You don\'t have the matching Lishi pick — order/borrow one if the job needs picking or decoding. ' : '') + (lishiCloseOnly ? 'Your Lishi pick is a close match, not exact — confirm it fits before you cut. ' : '') + (coverageUnclear ? 'Tool coverage is partial or platform-dependent — check the live function list in-app.' : '');
   } else {
     box.classList.add('ok'); icon.textContent = '🟢';
     head.textContent = 'Likely ACCEPT';
