@@ -37,8 +37,10 @@
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
   .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
   .grid4{display:grid; grid-template-columns:1fr 0.8fr 1.3fr 1fr; gap:14px;}
-  @media(max-width:640px){.grid2,.grid3,.grid4{grid-template-columns:1fr;}}
-  @media(max-width:900px) and (min-width:641px){.grid4{grid-template-columns:1fr 1fr;}}
+  .grid5{display:grid; grid-template-columns:0.9fr 1fr 1.3fr 0.8fr 1fr; gap:14px;}
+  @media(max-width:640px){.grid2,.grid3,.grid4,.grid5{grid-template-columns:1fr;}}
+  @media(max-width:900px) and (min-width:641px){.grid4,.grid5{grid-template-columns:1fr 1fr;}}
+  @media(max-width:1180px) and (min-width:901px){.grid5{grid-template-columns:1fr 1fr 1fr;}}
   .field{margin-bottom:14px;}
   .btn{
     display:inline-block; background:var(--accent); color:var(--accent-ink); border:none;
@@ -141,14 +143,18 @@
       <label>Registration number (optional, for your notes)</label>
       <input type="text" id="reg" placeholder="e.g. AB12 CDE" maxlength="10" style="text-transform:uppercase;">
     </div>
-    <div class="grid4">
+    <div class="grid5">
       <div class="field">
         <label>Make</label>
         <select id="makeSelect"><option value="">Select make…</option></select>
       </div>
       <div class="field">
-        <label>Model / generation</label>
+        <label>Model</label>
         <select id="modelSelect"><option value="">Select make first…</option></select>
+      </div>
+      <div class="field">
+        <label>Generation</label>
+        <select id="generationSelect"><option value="">Select model first…</option></select>
       </div>
       <div class="field">
         <label>Year (optional)</label>
@@ -162,7 +168,7 @@
         </select>
       </div>
     </div>
-    <p class="hint" style="margin-top:-8px;">Pick Make, then Model, same as scrolling your Autel or Xhorse vehicle menus. Year is optional — pick it to bring the model(s) from that year to the top of the list, without hiding anything else, since a few entries bundle several sub-models with different year spans.</p>
+    <p class="hint" style="margin-top:-8px;">Pick Make, then Model, then Generation — same as scrolling your Autel or Xhorse vehicle menus. Year is optional — pick it to bring the generation(s) from that year to the top of the list, without hiding anything else, since a few entries bundle several years/chassis into one generation.</p>
     <button class="btn" id="checkBtn" onclick="runCheck()">Check this job</button>
   </div>
 
@@ -252,7 +258,7 @@
       <table class="invtable covtable" id="coverageTable">
         <thead>
           <tr>
-            <th>Make</th><th>Model / generation</th><th>Method</th>
+            <th>Make</th><th>Model</th><th>Generation</th><th>Method</th>
             <th>Add key<br>Autel</th><th>Add key<br>Xhorse</th>
             <th>All keys lost<br>Autel</th><th>All keys lost<br>Xhorse</th><th></th>
           </tr>
@@ -385,112 +391,112 @@ function resolveBladeStock(dbCode){
 // treat those as "verify before quoting", not as a guess dressed up as fact.
 const DB = [
   // ================= FORD =================
-  { make:"Ford", model:"Sierra / Escort Mk5-6 / Granada (pre-~1996, no transponder)",
+  { make:"Ford", model:"Sierra / Escort Mk5-6 / Granada (pre-~1996, no transponder)", models:["Sierra","Escort","Granada"],
     blade:"Mechanical only — no transponder", lishi:"N/A — standard pick only", lishiOwned:"no",
     add:{method:"N/A — key cutting only", autel:"no", xhorse:"no"},
     akl:{method:"N/A — key cutting only", autel:"no", xhorse:"no"},
     note:"Pre-transponder era. No electronic programming exists for these — it's mechanical key-cutting to code/lock, or diagnosing an aftermarket relay immobiliser. Very low job volume." },
-  { make:"Ford", model:"Fiesta / Focus / Escort (Tibbe-era PATS1/2, ~1995–2003) / Ka Mk1 (1996–2008)",
+  { make:"Ford", model:"Fiesta / Focus / Escort (Tibbe-era PATS1/2, ~1995–2003) / Ka Mk1 (1996–2008)", models:["Fiesta","Focus","Escort","Ka"],
     blade:"FO21 (Tibbe)", lishi:"FO21 (round-profile Tibbe pick — different tool type from flat 2-in-1s)", lishiOwned:"no",
     add:{method:"OBD (with 1 key present, some self-learn)", autel:"check", xhorse:"check"},
     akl:{method:"Bench (usually — PIN/EEPROM read)", autel:"partial", xhorse:"partial"},
     note:"This is the specific Tibbe-blade generation, not all pre-2008 Fords. You stock the FO21 blade but not the FO21 Lishi pick — order one before a job that needs picking/decoding." },
-  { make:"Ford", model:"Ka Mk2/Ka+ (2008–2016, Fiat-based electronics)",
+  { make:"Ford", model:"Ka Mk2/Ka+ (2008–2016, Fiat-based electronics)", models:["Ka"],
     blade:"Unconfirmed — verify physically (Fiat-shared, may not be FO21)", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"check-live-list", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     note:"Genuine gap — this generation shares Fiat 500 electronics, breaking the normal Ford PATS pattern. Verify against the live list before booking, don't assume FO21/HU101." },
-  { make:"Ford", model:"Fiesta / Focus / Mondeo / C-Max / EcoSport (2008–2015, PATS/KVM)",
+  { make:"Ford", model:"Fiesta / Focus / Mondeo / C-Max / EcoSport (2008–2015, PATS/KVM)", models:["Fiesta","Focus","Mondeo","C-Max","EcoSport"],
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
     note:"Well-trodden ground for both tools — PIN read via OBD from the KVM." },
-  { make:"Ford", model:"Fiesta / Focus / Kuga / EcoSport / Mondeo (2015–2020, BCM/gateway)",
+  { make:"Ford", model:"Fiesta / Focus / Kuga / EcoSport / Mondeo (2015–2020, BCM/gateway)", models:["Fiesta","Focus","Kuga","EcoSport","Mondeo"],
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD (usually)", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD (usually)", autel:"partial", xhorse:"partial"},
     note:"Later cars in this range can be gateway-protected — check the specific VIN's function list before booking an AKL. From ~2017-18 facelifts, the lock pinning changed underneath the same 'HU101' blade name (trade calls it HU198) — same blade/programming, but you may need a different Lishi pick specifically for door/ignition lock picking; verify physically." },
-  { make:"Ford", model:"Puma / Fiesta / Focus facelift (2020+, secured gateway)",
+  { make:"Ford", model:"Puma / Fiesta / Focus facelift (2020+, secured gateway)", models:["Puma","Fiesta","Focus"],
     blade:"HU101 (HU198-pinned lock on many — verify Lishi pick physically)", lishi:"HU101 (may need HU198-spec pick for lock picking)", lishiOwned:"yes",
     add:{method:"OBD (usually)", autel:"check", xhorse:"check"},
     akl:{method:"Bench (usually)", autel:"check", xhorse:"check"},
     note:"Ford's 2021+ AutoAuth security-gateway requirement is the single biggest coverage risk across the whole modern Ford range (also affects Transit, Puma, facelifted Fiesta/Focus, F-150) — Autel needs AutoAuth access for full function on 2021+ VINs; standard coverage is more reliable on 2020-and-below. Verify current coverage before quoting an AKL." },
-  { make:"Ford", model:"Transit Mk6/Mk7 (2000–2014, PATS3/4, diagnostic-only)",
+  { make:"Ford", model:"Transit Mk6/Mk7 (2000–2014, PATS3/4, diagnostic-only)", models:["Transit"],
     blade:"FO21 (older) — some later Mk7 vans trend toward HU101, verify physically", lishi:"FO21 / HU101 (check which)", lishiOwned:"no",
     add:{method:"OBD (no onboard self-learn on this platform)", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD (PIN read via diagnostic tool)", autel:"yes", xhorse:"yes"},
     note:"Mk7 does not support on-board programming — every key add/AKL needs diagnostic tool connection, no shortcut. High commercial job volume." },
-  { make:"Ford", model:"Transit Custom / Transit Connect (2012/2013–2023, pre-facelift)",
+  { make:"Ford", model:"Transit Custom / Transit Connect (2012/2013–2023, pre-facelift)", models:["Transit Custom","Transit Connect"],
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"partial"},
     note:"Xhorse sells a dedicated 'Ford All Keys Lost Cable with Active Alarm' (XDFAKLGL) for 2016–2021 Ford smart-key vehicles, explicitly Key Tool Plus compatible, no soldering — the right accessory to stock for this job. Later years may hit the AutoAuth gateway — check live." },
-  { make:"Ford", model:"Transit / Transit Custom (2019/2020+ facelift, current)",
+  { make:"Ford", model:"Transit / Transit Custom (2019/2020+ facelift, current)", models:["Transit","Transit Custom"],
     blade:"HU101 (HU198-pinned lock likely from ~2017+ builds — verify Lishi pick)", lishi:"HU101 (may need HU198-spec pick)", lishiOwned:"yes",
     add:{method:"OBD (confirmed working, WiFi-connected Autel)", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD (usually) / AutoAuth gated on 2021+", autel:"partial", xhorse:"check"},
     note:"Autel coverage extends reliably to 2020-and-below; 2021+ needs AutoAuth authorization which isn't automatic — same caveat as Puma/Fiesta/Focus facelift above." },
-  { make:"Ford", model:"Ranger (T6 2011–2022 / T6.2 2022+)",
+  { make:"Ford", model:"Ranger (T6 2011–2022 / T6.2 2022+)", models:["Ranger"],
     blade:"HU101 (unconfirmed, esp. T6.2 — verify physically)", lishi:"HU101 (unconfirmed for T6.2)", lishiOwned:"yes",
     add:{method:"OBD (usually, pre-2022)", autel:"check", xhorse:"check"},
     akl:{method:"OBD (usually, pre-2022) — T6.2 check-live-list", autel:"check", xhorse:"check"},
     note:"Coverage info is thin for this model — verify against the live vehicle list before quoting, especially anything 2022+ which may share the newer Transit gateway generation." },
-  { make:"Ford", model:"Edge / Mustang / F-150 / Lincoln (US-platform Fords/Lincolns sold in UK)",
+  { make:"Ford", model:"Edge / Mustang / F-150 / Lincoln (US-platform Fords/Lincolns sold in UK)", models:["Edge","Mustang","F-150","Lincoln"],
     blade:"FO38", lishi:"FO38", lishiOwned:"yes",
     add:{method:"OBD (usually)", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD (usually)", autel:"partial", xhorse:"partial"},
     note:"Different blade family to the European Focus/Fiesta/Kuga range — don't assume HU101 fits these; confirm FO38 before cutting." },
 
   // ================= VAUXHALL / OPEL =================
-  { make:"Vauxhall/Opel", model:"Astra F/G, early Vectra, Corsa B/C (1991–2004, pre-HU100)",
+  { make:"Vauxhall/Opel", model:"Astra F/G, early Vectra, Corsa B/C (1991–2004, pre-HU100)", models:["Astra","Vectra","Corsa"],
     blade:"HU46", lishi:"HU46", lishiOwned:"no",
     add:{method:"check-live-list", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list — likely needs specialist/used-ECU route", autel:"check", xhorse:"check"},
     note:"Old enough that most jobs now rely on used-ECU/EEPROM work rather than Autel/Xhorse. Low volume, verify tool support before quoting." },
-  { make:"Vauxhall/Opel", model:"Vectra C/Signum, Astra H, Zafira B, Corsa D/E, Astra J, Insignia, Mokka, Meriva (2002–2017, Delphi/GM, HU100)",
+  { make:"Vauxhall/Opel", model:"Vectra C/Signum, Astra H, Zafira B, Corsa D/E, Astra J, Insignia, Mokka, Meriva (2002–2017, Delphi/GM, HU100)", models:["Vectra","Signum","Astra","Zafira","Corsa","Insignia","Mokka","Meriva"],
     blade:"HU100", lishi:"HU100", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
     note:"PIN-code read via OBD is a strong point for both tools across this whole HU100 generation (starts earlier than 2010 — Vectra C from 2002, Astra H from 2004). HU100 (Opel/GM/Buick/Cadillac) and HU100R (newer BMW/Rolls-Royce) are different blade families despite the similar name — don't mix them up." },
-  { make:"Vauxhall/Opel", model:"Combo C (2001–2011, Corsa-based)",
+  { make:"Vauxhall/Opel", model:"Combo C (2001–2011, Corsa-based)", models:["Combo"],
     blade:"HU100 (Corsa-shared)", lishi:"HU100", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
     note:"Genuine Vauxhall electronics, same as contemporary Corsa." },
-  { make:"Vauxhall/Opel", model:"Combo D (2011–2018, rebadged Fiat Doblo — NOT Vauxhall electronics)",
+  { make:"Vauxhall/Opel", model:"Combo D (2011–2018, rebadged Fiat Doblo — NOT Vauxhall electronics)", models:["Combo"],
     blade:"Unconfirmed — likely Fiat-pattern, do NOT assume HU100", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"check-live-list — treat as Fiat platform", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list — treat as Fiat platform", autel:"check", xhorse:"check"},
     note:"Trap: looks like a Vauxhall van but is mechanically/electronically a Fiat Doblo. Verify VIN/badge generation before pulling Vauxhall-specific blade or tool assumptions." },
-  { make:"Vauxhall/Opel", model:"Combo E (2018+, PSA-based, shares Astra K/Corsa F electronics)",
+  { make:"Vauxhall/Opel", model:"Combo E (2018+, PSA-based, shares Astra K/Corsa F electronics)", models:["Combo"],
     blade:"HU83 (likely, unconfirmed independently for this van)", lishi:"HU83", lishiOwned:"yes",
     add:{method:"OBD (if 1 key present)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench (usually)", autel:"partial", xhorse:"partial"},
     note:"Follows the Astra K/Corsa F PSA pattern — treat like Peugeot/Citroen for AKL." },
-  { make:"Vauxhall/Opel", model:"Astra K, Corsa F, Grandland, Crossland (2017+, PSA-based)",
+  { make:"Vauxhall/Opel", model:"Astra K, Corsa F, Grandland, Crossland (2017+, PSA-based)", models:["Astra","Corsa","Grandland","Crossland"],
     blade:"HU83", lishi:"HU83", lishiOwned:"yes",
     add:{method:"OBD (if 1 key present)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench (usually)", autel:"partial", xhorse:"partial"},
     note:"Post GM/PSA-merger cars share PSA's BSI architecture. Insignia B and facelifted Mokka B/Grandland (2020+) mixed-platform electronics are unconfirmed as fully HU83/PSA vs still HU100/GM — verify physically per VIN rather than assuming either." },
-  { make:"Vauxhall/Opel", model:"Vivaro (A/B/C, 2001+) / Movano (A/B/C, 1998+) — Renault-derived vans",
+  { make:"Vauxhall/Opel", model:"Vivaro (A/B/C, 2001+) / Movano (A/B/C, 1998+) — Renault-derived vans", models:["Vivaro","Movano"],
     blade:"Unconfirmed — likely VAC102 (Renault-pattern), NOT a GM/Opel blade", lishi:"Unconfirmed — verify physically", lishiOwned:"no",
     add:{method:"OBD (generally workable via generic tools)", autel:"partial", xhorse:"partial"},
     akl:{method:"Difficult — flagged in the trade as needing more than Autel alone (Renault-specific tool sometimes required)", autel:"partial", xhorse:"partial"},
     note:"These are rebadged Renault Trafic/Master throughout their life — treat as Renault electronics, not GM/Opel. Do not book same-day AKL on Autel/Xhorse alone without checking live coverage; a Renault-specific tool (AVDI/Abrites) is sometimes needed." },
 
   // ================= MINI =================
-  { make:"MINI", model:"R50/R52/R53 (Hatch/Convertible/Cooper S, 2001–2006/2008, BMW EWS-derived)",
+  { make:"MINI", model:"R50/R52/R53 (Hatch/Convertible/Cooper S, 2001–2006/2008, BMW EWS-derived)", models:["Hatch","Convertible","Cooper S"],
     blade:"HU92", lishi:"HU92", lishiOwned:"yes",
     add:{method:"OBD (EWS key-learn, working key present)", autel:"check", xhorse:"check"},
     akl:{method:"Bench (EWS EEPROM read, usually)", autel:"partial", xhorse:"partial"},
     note:"Earliest MINI generation, EWS-era not CAS. Coverage details are thin online — verify against your tools' own vehicle list before quoting; may need an older/specialist EWS tool." },
-  { make:"MINI", model:"R55/R56/R57/R58/R59 (Clubman/Hatch/Convertible/Coupe/Roadster, 2006/2007–2013/2014, CAS2/3/3+)",
+  { make:"MINI", model:"R55/R56/R57/R58/R59 (Clubman/Hatch/Convertible/Coupe/Roadster, 2006/2007–2013/2014, CAS2/3/3+)", models:["Clubman","Hatch","Convertible","Coupe","Roadster"],
     blade:"HU92", lishi:"HU92", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (CAS3+ ISN read, usually)", autel:"partial", xhorse:"partial"},
     bench:["godiag_cas12mech","godiag_cas23ser","xdnp11"],
     note:"⚠ CAS3+ (R56 facelift ~2010–2014) all-keys-lost carries a documented BRICKING RISK doing it over OBD with the Xhorse Key Tool Plus in certain circumstances — a recovery workaround exists but proceed with caution, have a recovery plan/backup EEPROM read before attempting via OBD on this specific generation." },
-  { make:"MINI", model:"F54/F55/F56/F57/F60 (Clubman/Hatch/Convertible/Countryman, 2014–2023/2024, FEM/BDC)",
+  { make:"MINI", model:"F54/F55/F56/F57/F60 (Clubman/Hatch/Convertible/Countryman, 2014–2023/2024, FEM/BDC)", models:["Clubman","Hatch","Convertible","Countryman"],
     blade:"HU100R", lishi:"HU100R — you DO own this pick (your 32-item Lishi list has it listed for 'New BMW, Rolls Royce'; HU92 does NOT cover this generation, this is the correct one)", lishiOwned:"yes",
     add:{method:"Bench (OBD-via-BDC possible on 2023+ firmware)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench (OBD-capable on 2023+ Autel firmware update)", autel:"partial", xhorse:"partial"},
@@ -498,147 +504,147 @@ const DB = [
     note:"Confirm your specific IM508S has the 2023 'BDC by OBD' firmware update before quoting AKL as same-day — earlier firmware needs bench/module removal. Blade is HU100R (FEM/BDC family), not the older HU92." },
 
   // ================= VOLVO =================
-  { make:"Volvo", model:"850 / S70 / V70 Mk1 / C70 Mk1 (P80 platform, ~1993–2000, pre-Ford-ownership)",
+  { make:"Volvo", model:"850 / S70 / V70 Mk1 / C70 Mk1 (P80 platform, ~1993–2000, pre-Ford-ownership)", models:["850","S70","V70","C70"],
     blade:"Unconfirmed — verify physically, not HU101", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Partial DIY ignition-cycle self-learn on early cars; 1999-2000 needs VIDA", autel:"no", xhorse:"no"},
     akl:{method:"Bench/VIDA territory — unlikely reliable on aftermarket tools", autel:"no", xhorse:"no"},
     note:"Genuinely different, older, non-Ford system — don't apply HU101/Ford-platform assumptions to these." },
-  { make:"Volvo", model:"S60/S80 Mk1, V70 Mk2, XC70 Mk1, XC90 Mk1 (P2 platform, ~2000/2002–2009/2014)",
+  { make:"Volvo", model:"S60/S80 Mk1, V70 Mk2, XC70 Mk1, XC90 Mk1 (P2 platform, ~2000/2002–2009/2014)", models:["S60","S80","V70","XC70","XC90"],
     blade:"NE66", lishi:"NE66 (4-track 2-in-1/3-in-1)", lishiOwned:"no",
     add:{method:"OBD (CEM-gatekept PIN)", autel:"check", xhorse:"partial"},
     akl:{method:"CEM PIN-read (OBD or bench EEPROM)", autel:"check", xhorse:"partial"},
     bench:["xdnp27","xdnp28","xdnp29"],
     note:"This is the genuinely different, non-Ford Volvo system — CEM/VIDA architecture, distinct from both the older Ford-platform Volvo (HU101) and the modern SPA Volvo (also HU101, confusingly). NE66 blade is the visual tell. Bench module tag: you own Volvo KVM/CEM-1/CEM-2 adapters (XDNP27/28/29) but which one matches this exact CEM generation isn't independently confirmed — check the module label before the job." },
-  { make:"Volvo", model:"S60/V60 Mk2, S80 Mk2 (late), V70 Mk3, XC70 Mk2, XC60 Mk1 (P3 platform, ~2007/2008–2016/2018)",
+  { make:"Volvo", model:"S60/V60 Mk2, S80 Mk2 (late), V70 Mk3, XC70 Mk2, XC60 Mk1 (P3 platform, ~2007/2008–2016/2018)", models:["S60","V60","S80","V70","XC70","XC60"],
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD (slow — can take hours for CEM PIN read)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench EEPROM read of CEM is faster; pure OBD can take up to ~24hrs uninterrupted", autel:"partial", xhorse:"partial"},
     bench:["xdnp27","xdnp28","xdnp29"],
     note:"Same HU101 blade as Ford-platform Volvo/Ford itself despite being a wholly different (Volvo-native CEM) electronic system — blade code alone doesn't tell you the architecture. Set customer expectations: this is not a same-visit job via pure OBD in many cases. Bench module tag: same caveat as the P2 CEM entry — confirm which of your Volvo KVM/CEM-1/CEM-2 adapters matches this module before the job." },
-  { make:"Volvo", model:"XC90 Mk2 (SPA platform, 2015+)",
+  { make:"Volvo", model:"XC90 Mk2 (SPA platform, 2015+)", models:["XC90"],
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD (4-6hrs) or EEPROM+OBD combined (~3hrs, needs stable battery charger)", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD (slow, hours) or bench/EEPROM faster — battery must stay connected during decryption or it restarts", autel:"partial", xhorse:"partial"},
     note:"Both tools can do this — but budget several hours and stable power, not a quick job. This directly answers 'even if very limited/not supported' — the honest answer here is 'supported but slow'." },
-  { make:"Volvo", model:"XC60 Mk2, XC40 (CMA), S60/V60 Mk3, S90/V90 (SPA/CMA platform, 2016/2017/2018+)",
+  { make:"Volvo", model:"XC60 Mk2, XC40 (CMA), S60/V60 Mk3, S90/V90 (SPA/CMA platform, 2016/2017/2018+)", models:["XC60","XC40","S60","V60","S90","V90"],
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD (by inference from XC90 case study)", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD (slow) or bench, by inference from XC90 — not independently confirmed per model", autel:"check", xhorse:"check"},
     note:"Treat the XC90 SPA findings as the best available proxy, not a confirmed fact for every model here — XC40 (CMA) in particular may have electrical differences, verify before quoting." },
-  { make:"Volvo", model:"S40/V50/C30/C70 Mk2 (Ford C1-platform, ~2004–2012)",
+  { make:"Volvo", model:"S40/V50/C30/C70 Mk2 (Ford C1-platform, ~2004–2012)", models:["S40","V50","C30","C70"],
     blade:"HU101", lishi:"HU101", lishiOwned:"yes",
     add:{method:"OBD (usually)", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD (usually) / Bench on some", autel:"partial", xhorse:"partial"},
     note:"These share Ford's platform and PATS-style immobiliser of the era, so HU101 applies. Does NOT extend to modern SPA-platform Volvo (see above) — different system entirely." },
 
   // ================= VW / AUDI / SEAT / SKODA =================
-  { make:"VW/Audi/Seat/Skoda", model:"Pre-MQB, Immo2/3 (Golf 4/5, Passat B5/B6, Polo 9N, Octavia I/II, Ibiza 6L, Leon 1M/1P)",
+  { make:"VW/Audi/Seat/Skoda", model:"Pre-MQB, Immo2/3 (Golf 4/5, Passat B5/B6, Polo 9N, Octavia I/II, Ibiza 6L, Leon 1M/1P)", models:["Golf","Passat","Polo","Octavia","Ibiza","Leon"],
     blade:"HU66", lishi:"HU66", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD (usually)", autel:"yes", xhorse:"yes"},
     note:"Component-protected PIN read over OBD is well supported on Immo3. This bucket excludes VW commercial vehicles — Transporter/Caddy ran a parallel, longer-lived Immo4 timeline (see below)." },
-  { make:"VW/Audi/Seat/Skoda", model:"Transporter T5/T5.1 (2003–2015), Caddy (2004–2020ish), Tiguan Mk1 (2008–2017), Amarok (2010+) — commercial Immo4 'CAN INS'",
+  { make:"VW/Audi/Seat/Skoda", model:"Transporter T5/T5.1 (2003–2015), Caddy (2004–2020ish), Tiguan Mk1 (2008–2017), Amarok (2010+) — commercial Immo4 'CAN INS'", models:["Transporter","Caddy","Tiguan","Amarok"],
     blade:"HU66", lishi:"HU66", lishiOwned:"yes",
     add:{method:"OBD (generally possible with correct pin data)", autel:"partial", xhorse:"partial"},
     akl:{method:"Frequently bench (dashboard removal, PIN/CS extraction)", autel:"partial", xhorse:"partial"},
     bench:["godiag_vag_gt"],
     note:"This is the biggest gap that existed in the old data — these run a much longer-lived Immo4/Immo4+ dashboard-EEPROM system, NOT the MQB timeline the passenger cars follow. UK van forum threads show mixed/unconfirmed OBD success on later T6/T6.1 — treat as check-live-list for immo work, not a blanket yes." },
-  { make:"VW/Audi/Seat/Skoda", model:"Crafter (2017+, MAN-based 2nd gen)",
+  { make:"VW/Audi/Seat/Skoda", model:"Crafter (2017+, MAN-based 2nd gen)", models:["Crafter"],
     blade:"HU64", lishi:"HU64 2-in-1 (10-cut V3 — different tool from HU66)", lishiOwned:"no",
     add:{method:"Bench/dashboard-based", autel:"check", xhorse:"check"},
     akl:{method:"Bench", autel:"check", xhorse:"check"},
     bench:["godiag_vag_gt"],
     note:"Do not assume Crafter = same blade/procedure as Transporter/Caddy — it uses a dedicated dashboard immobiliser with its own HU64 blade (also sold as HU116 by some suppliers), different from both Golf/Passat and the Transporter/Caddy family." },
-  { make:"VW/Audi/Seat/Skoda", model:"MQB48 — VW/Audi (Golf 7, Passat B8, A3 8V, Q2, TT 8S, S3/RS3, 2013–2020)",
+  { make:"VW/Audi/Seat/Skoda", model:"MQB48 — VW/Audi (Golf 7, Passat B8, A3 8V, Q2, TT 8S, S3/RS3, 2013–2020)", models:["Golf","Passat","A3","Q2","TT","S3","RS3"],
     blade:"HU66 (blade-key) / HU162T-9 (VW, smart-key) / HU162T-10 (Audi, smart-key)", lishi:"HU66 / HU162T-9 / HU162T-10", lishiOwned:"yes",
     add:{method:"OBD (needs security token/APB300 or XP400 Pro)", autel:"yes", xhorse:"partial"},
     akl:{method:"OBD possible on VW/Audi blade-key + Megamos AES models specifically (2023+ Autel update) — otherwise bench", autel:"partial", xhorse:"partial"},
     note:"VW and Audi have a genuine OBD-based AKL path on Autel that Skoda/Seat currently lack (see their own entries below) — this is a real make-specific advantage worth knowing before you quote a job." },
-  { make:"VW/Audi/Seat/Skoda", model:"MQB48 — Skoda/Seat (Octavia III, Superb III, Kodiaq, Karoq, Leon 5F, Ateca, Arona, 2012/2013–2020)",
+  { make:"VW/Audi/Seat/Skoda", model:"MQB48 — Skoda/Seat (Octavia III, Superb III, Kodiaq, Karoq, Leon 5F, Ateca, Arona, 2012/2013–2020)", models:["Octavia","Superb","Kodiaq","Karoq","Leon","Ateca","Arona"],
     blade:"HU66 (blade-key) / HU162T-9 (smart-key, same 9-cut as VW)", lishi:"HU66 / HU162T-9", lishiOwned:"yes",
     add:{method:"OBD (Autel/Xhorse both name Skoda/Seat in base coverage)", autel:"yes", xhorse:"partial"},
     akl:{method:"Bench required — a 2023-era Autel update explicitly excluded Skoda/Seat from the OBD-AKL route that VW/Audi got", autel:"partial", xhorse:"partial"},
     note:"Skoda/Seat MQB AKL should be flagged as 'bench required' with higher confidence than VW/Audi AKL, which may succeed via OBD. Xhorse's bench MQB48 route is arguably Skoda's best-supported AKL path of the two tools." },
-  { make:"VW/Audi/Seat/Skoda", model:"MQB Gen2/IMMO5C (RH850) — Tiguan Mk2 facelift, Polo (2018+), T-Roc (2020+)",
+  { make:"VW/Audi/Seat/Skoda", model:"MQB Gen2/IMMO5C (RH850) — Tiguan Mk2 facelift, Polo (2018+), T-Roc (2020+)", models:["Tiguan","Polo","T-Roc"],
     blade:"HU162T-9 (unconfirmed vs Gen1 cut — verify physically)", lishi:"HU162T-9 (unconfirmed)", lishiOwned:"yes",
     add:{method:"Largely dealer/Abrites-territory", autel:"no", xhorse:"no"},
     akl:{method:"Dealer-territory", autel:"no", xhorse:"no"},
     note:"This 2020+ RH850 generation is the real inflection point where independent coverage drops off, not simply '2018+'." },
-  { make:"VW/Audi/Seat/Skoda", model:"Golf 8, T-Roc facelift, Tiguan Mk3, Octavia IV, Enyaq (IMMO5D / SFD gateway, 2020+)",
+  { make:"VW/Audi/Seat/Skoda", model:"Golf 8, T-Roc facelift, Tiguan Mk3, Octavia IV, Enyaq (IMMO5D / SFD gateway, 2020+)", models:["Golf","T-Roc","Tiguan","Octavia","Enyaq"],
     blade:"HU162T-9 (unconfirmed, verify physically)", lishi:"HU162T-9 (unconfirmed)", lishiOwned:"yes",
     add:{method:"OBD add-key WITH a working key present, plus SFD gateway unlock step — does NOT cover AKL", autel:"partial", xhorse:"no"},
     akl:{method:"No — confirmed limitation in Autel's own update notes", autel:"no", xhorse:"no"},
     note:"SFD/SFD2 signed-token security gateway layered on top of MQB Gen2/Golf 8/MLB/MEB — the single biggest reason this newest generation is a 'no' for both tools." },
-  { make:"VW/Audi/Seat/Skoda", model:"ID.3 / ID.4 / ID.Buzz (MEB platform, 2020+)",
+  { make:"VW/Audi/Seat/Skoda", model:"ID.3 / ID.4 / ID.Buzz (MEB platform, 2020+)", models:["ID.3","ID.4","ID.Buzz"],
     blade:"Unconfirmed — likely HU162T family emergency backup, largely keyless", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Dealer-only until proven otherwise", autel:"no", xhorse:"no"},
     akl:{method:"Dealer-only until proven otherwise", autel:"no", xhorse:"no"},
     note:"SFD2 (2024+) cryptographic gateway confirmed to explicitly include ID.4/ID.Buzz. No aftermarket-coverage source found — treat as dealer-territory pending verification." },
-  { make:"VW/Audi/Seat/Skoda", model:"Audi BCM2 'unlocked' — A4 B8 early/A5/Q5 pre-2013/A6 C7 early/A8 D4 early/Q7 4L/Touareg 7P (2010+)",
+  { make:"VW/Audi/Seat/Skoda", model:"Audi BCM2 'unlocked' — A4 B8 early/A5/Q5 pre-2013/A6 C7 early/A8 D4 early/Q7 4L/Touareg 7P (2010+)", models:["A4","A5","Q5","A6","A8","Q7","Touareg"],
     blade:"HU66", lishi:"HU66", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
     note:"This is the generation where Q7/Touareg is still reasonably serviceable — it's the later MLB Evo generation (2016+/2018+, see below) that becomes hard, not Q7/Touareg generally." },
-  { make:"VW/Audi/Seat/Skoda", model:"Audi BCM2 'locked' — A4 B8 (2013+), A6 C7 (2013+), A7, A8 D4 (later), Q5 (2013+)",
+  { make:"VW/Audi/Seat/Skoda", model:"Audi BCM2 'locked' — A4 B8 (2013+), A6 C7 (2013+), A7, A8 D4 (later), Q5 (2013+)", models:["A4","A6","A7","A8","Q5"],
     blade:"HU66", lishi:"HU66", lishiOwned:"yes",
     add:{method:"Bench (VVDI-PROG + dedicated VVDI BCM2 adapter, needs internet for calculation)", autel:"no", xhorse:"partial"},
     akl:{method:"Bench, same VVDI-PROG + BCM2 adapter method, confirmed working on 2013–2019 A4L/A5/Q5/A6L/A7/A8", autel:"no", xhorse:"partial"},
     note:"Requires online-server component security calculation — not a fully offline OBD job. No confirmed Autel-only path exists; Xhorse's bench BCM2-adapter route is the documented option." },
-  { make:"VW/Audi/Seat/Skoda", model:"Audi MLB / MLB Evo — A4 B9+ (2016+), A5, A6 C8, A7, A8 D5, Q5 FY, Q7 4M, Q8, Touareg CR/Porsche Cayenne-shared platform",
+  { make:"VW/Audi/Seat/Skoda", model:"Audi MLB / MLB Evo — A4 B9+ (2016+), A5, A6 C8, A7, A8 D5, Q5 FY, Q7 4M, Q8, Touareg CR/Porsche Cayenne-shared platform", models:["A4","A5","A6","A7","A8","Q5","Q7","Q8","Touareg"],
     blade:"Unconfirmed — likely proximity-only, verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Xhorse sells a dedicated 'VVDI MLB Tool' hardware add-on for no-chip-removal add-key", autel:"no", xhorse:"partial"},
     akl:{method:"Not yet broadly available even to specialist third-party tools", autel:"no", xhorse:"no"},
     note:"IMPORTANT CORRECTION — this is a separate platform from MQB entirely, NOT 'same MQB generation applied to Audi'. Q7/Touareg/Q8/newer A6-A8 should not be lumped in with the MQB49+ bucket; it's architecturally distinct with much worse tool coverage." },
 
   // ================= BMW / MINI-adjacent / ROLLS-ROYCE =================
-  { make:"BMW", model:"EWS I/II/III (E36, E34, E38, E39 pre-facelift, E46 pre-~2001)",
+  { make:"BMW", model:"EWS I/II/III (E36, E34, E38, E39 pre-facelift, E46 pre-~2001)", models:["3 Series","5 Series","7 Series"],
     blade:"HU58", lishi:"HU58 2-in-1/3-in-1", lishiOwned:"no",
     add:{method:"OBD (EWS key-learn, working key present)", autel:"check", xhorse:"check"},
     akl:{method:"Bench (EWS EEPROM ISN/sync read, usually)", autel:"partial", xhorse:"partial"},
     note:"Old enough that coverage is thin online — verify against your tools' own list before quoting. You don't stock the HU58 pick." },
-  { make:"BMW", model:"CAS1/CAS2 (E46, E39, E60/E61, E63/E64, E65/E66, ~2000–2008)",
+  { make:"BMW", model:"CAS1/CAS2 (E46, E39, E60/E61, E63/E64, E65/E66, ~2000–2008)", models:["3 Series","5 Series","6 Series","7 Series"],
     blade:"HU92", lishi:"HU92", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
     bench:["godiag_cas12mech"],
     note:"Straightforward PIN/ISN read over OBD. Note EWS and CAS1 overlapped messily by chassis and even build date within a chassis on E39/E46 facelifts — verify on-car if it's a borderline year." },
-  { make:"BMW", model:"CAS3/CAS3+ (E87, E90, E92, E93, E70, E71, E84, E89, ~2005–2013)",
+  { make:"BMW", model:"CAS3/CAS3+ (E87, E90, E92, E93, E70, E71, E84, E89, ~2005–2013)", models:["1 Series","3 Series","X5","X6","X1","Z4"],
     blade:"HU92", lishi:"HU92", lishiOwned:"yes",
     add:{method:"OBD (usually)", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (usually, mature/well-documented on both tools)", autel:"yes", xhorse:"yes"},
     bench:["godiag_cas23ser","xdnp11"],
     note:"CAS3+ AKL typically needs a bench ISN read, not plug-and-play OBD, but this is a very mature capability on both IM508S and KTP." },
-  { make:"BMW", model:"CAS4/CAS4+ (F01/F02, F10/F11, F06/F12/F13, F25, ~2009–2014, larger F-chassis)",
+  { make:"BMW", model:"CAS4/CAS4+ (F01/F02, F10/F11, F06/F12/F13, F25, ~2009–2014, larger F-chassis)", models:["7 Series","5 Series","6 Series","X3"],
     blade:"HU100R", lishi:"HU100R", lishiOwned:"yes",
     add:{method:"OBD (mature capability)", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (module read/write, sometimes OBD-assisted)", autel:"yes", xhorse:"yes"},
     bench:["xdnp12"],
     note:"CORRECTION: CAS4/large F-chassis uses HU100R, the small-profile blade introduced with CAS4 — NOT HU92. Distinct from FEM/BDC below, which also uses HU100R but is a different module generation." },
-  { make:"BMW", model:"FEM/BDC (F20/F21/F22/F23, F30/F31/F32/F33/F34/F36, F15/F16 X5/X6, ~2011/2013–2019)",
+  { make:"BMW", model:"FEM/BDC (F20/F21/F22/F23, F30/F31/F32/F33/F34/F36, F15/F16 X5/X6, ~2011/2013–2019)", models:["1 Series","2 Series","3 Series","4 Series","X5","X6"],
     blade:"HU100R", lishi:"HU100R", lishiOwned:"yes",
     add:{method:"Bench (module removal typically required even for a spare key)", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (mandatory module removal — G-Box2/APA103/FEM-BDC Test Platform, then OBD sync to DME)", autel:"yes", xhorse:"yes"},
     bench:["godiag_femdbc","xdnp18"],
     note:"CORRECTION: blade is HU100R, not HU92 (the old data's mistake). Genuinely a bench job on both tools for add-key and AKL in most real-world cases — needs the FEM/BDC adapter/test platform. You DO own the HU100R Lishi pick (item 5 on your real list, listed for 'New BMW, Rolls Royce') — the earlier version of this tool had this wrong." },
-  { make:"BMW", model:"G-series keyless (G20/G30/G05/G11 etc., 2018+, BDC2/BDC3/BCP)",
+  { make:"BMW", model:"G-series keyless (G20/G30/G05/G11 etc., 2018+, BDC2/BDC3/BCP)", models:["3 Series","5 Series","7 Series","X3","X4","X5","X6","X7"],
     blade:"HU100R (most emergency inserts) or HU162T-10 (some newer/keyless-card variants) — verify per VIN", lishi:"HU100R / HU162T-10 (check which) — you own both", lishiOwned:"yes",
     add:{method:"Bench + dedicated adapter now genuinely possible on both tools (as of ~2025/2026 updates)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench — BDC2 module removal required for AKL; BDC3/BCP sometimes doable via PCB cloning without removal", autel:"partial", xhorse:"partial"},
     bench:["godiag_femdbc","xdnp18"],
     note:"This moved from 'no aftermarket coverage' to 'yes, with paid adapters and bench skill' within the last 12–18 months (Autel G-Box2/APA103/Test Platform; Xhorse dedicated BMW adapter kit) — it's newly rolled out and VIN/option-code dependent, confirm against the live coverage list before quoting." },
 
-  { make:"Rolls-Royce", model:"Phantom VII (2003–2016, BMW E65/E66-derived)",
+  { make:"Rolls-Royce", model:"Phantom VII (2003–2016, BMW E65/E66-derived)", models:["Phantom"],
     blade:"Unconfirmed — likely HU92-family by era, verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Unconfirmed — very low volume", autel:"check", xhorse:"check"},
     akl:{method:"Unconfirmed — very low volume", autel:"check", xhorse:"check"},
     note:"BMW-owned since 2003, tracks early-2000s BMW CAS-era tech by launch timing. Minimal online documentation; expect to diagnose on-car before committing to a method." },
-  { make:"Rolls-Royce", model:"Ghost I, Wraith, Dawn (2009–2023, confirmed BMW CAS4/FEM-BDC-shared architecture)",
+  { make:"Rolls-Royce", model:"Ghost I, Wraith, Dawn (2009–2023, confirmed BMW CAS4/FEM-BDC-shared architecture)", models:["Ghost","Wraith","Dawn"],
     blade:"Likely HU100R by platform-sharing (unconfirmed for Rolls-Royce specifically)", lishi:"HU100R — you own this pick (your real Lishi list explicitly names it for 'New BMW, Rolls Royce'), just unconfirmed whether it's the exact fit for this model", lishiOwned:"close",
     add:{method:"Bench, by platform inference matching BMW CAS4/FEM — confirm your tool lists Rolls-Royce as selectable make/model", autel:"check", xhorse:"check"},
     akl:{method:"Bench, same inference", autel:"check", xhorse:"check"},
     bench:["godiag_femdbc","xdnp18","xdnp12"],
     note:"Dealerships will almost certainly refuse to program a used/aftermarket key fob on these — a real, confirmed opportunity for independent locksmiths. Verify live since Rolls-Royce is rarely explicitly listed by name even when the underlying BMW procedure works." },
-  { make:"Rolls-Royce", model:"Phantom VIII (2017+), Cullinan (2018+), Ghost II (2020+), Spectre (2023+) — BMW G-series-era",
+  { make:"Rolls-Royce", model:"Phantom VIII (2017+), Cullinan (2018+), Ghost II (2020+), Spectre (2023+) — BMW G-series-era", models:["Phantom","Cullinan","Ghost","Spectre"],
     blade:"Likely HU100R or HU162T-10 (unconfirmed, verify per VIN)", lishi:"HU100R / HU162T-10 — you own both picks, unconfirmed which fits this exact model", lishiOwned:"close",
     add:{method:"Dealer/specialist-mostly, likely more restrictive than BMW G-series given tighter dealer network", autel:"check", xhorse:"check"},
     akl:{method:"Dealer/specialist-mostly", autel:"check", xhorse:"check"},
@@ -646,484 +652,484 @@ const DB = [
     note:"Given the very high value and very low volume of this segment, treat every job as requiring a direct, live compatibility check before quoting — don't extrapolate confidently from BMW G-series coverage." },
 
   // ================= MERCEDES-BENZ / SMART =================
-  { make:"Mercedes-Benz", model:"W124, W140, pre-1998 models",
+  { make:"Mercedes-Benz", model:"W124, W140, pre-1998 models", models:["E-Class","S-Class"],
     blade:"Unconfirmed — likely older VA-series mechanical blade, not HU64", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Unconfirmed — some VINs have no electronic immobiliser at all", autel:"no", xhorse:"no"},
     akl:{method:"Unconfirmed — genuine grey area, largely specialist ignition-switch repair territory", autel:"no", xhorse:"no"},
     note:"Marginal for modern aftermarket tools — check whether the specific VIN even has an electronic immobiliser before promising standard tool coverage." },
-  { make:"Mercedes-Benz", model:"Older EIS/EZS NEC (W203, W211, ~2000–2009)",
+  { make:"Mercedes-Benz", model:"Older EIS/EZS NEC (W203, W211, ~2000–2009)", models:["C-Class","E-Class"],
     blade:"HU64", lishi:"HU64", lishiOwned:"yes",
     add:{method:"OBD (sometimes) / Bench", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (usually)", autel:"yes", xhorse:"yes"},
     bench:["xdkp30","vvdi_prog_ezs"],
     note:"EIS/EZS removal for bench read is common on AKL jobs." },
-  { make:"Mercedes-Benz", model:"FBS3 (~2010–2015, NEC+)",
+  { make:"Mercedes-Benz", model:"FBS3 (~2010–2015, NEC+)", models:["Multiple models — FBS3 generation"],
     blade:"HU64", lishi:"HU64", lishiOwned:"yes",
     add:{method:"Bench (usually)", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench (usually)", autel:"yes", xhorse:"yes"},
     bench:["xdkp30","vvdi_prog_ezs"],
     note:"Often needs a dedicated Benz bench solution/token beyond the standard programmer." },
-  { make:"Mercedes-Benz", model:"FBS4 (2015+, W205, W213, W177, W447-facelift and newer)",
+  { make:"Mercedes-Benz", model:"FBS4 (2015+, W205, W213, W177, W447-facelift and newer)", models:["C-Class","E-Class","A-Class","V-Class/Vito"],
     blade:"HU64 (emergency insert)", lishi:"HU64", lishiOwned:"yes",
     add:{method:"Dealer-server-dependent — Autel's ECU cloning function is module repair/clone, NOT genuine independent add-key", autel:"no", xhorse:"no"},
     akl:{method:"Dealer/specialist-only in the overwhelming majority of cases", autel:"no", xhorse:"no"},
     note:"⚠ Do not promise FBS4 add-key or AKL with the IM508S or Key Tool Plus. Realistic options: dealer, third-party tools outside your current kit (CGDI MB, KeyDIY PAK09), or module clone/renewal workarounds (a different, higher-liability job than key programming). This is the fastest-moving line item in the whole database — re-check every few months." },
-  { make:"Mercedes-Benz", model:"Sprinter Classic/NCV3, W906 (2006–2018)",
+  { make:"Mercedes-Benz", model:"Sprinter Classic/NCV3, W906 (2006–2018)", models:["Sprinter"],
     blade:"Unconfirmed — verify physically, may differ slightly from passenger HU64", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Bench, same as passenger-car FBS3", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench — one of the most common commercial AKL jobs per UK locksmith sources", autel:"yes", xhorse:"yes"},
     bench:["xdkp30","vvdi_prog_ezs"],
     note:"Shares FBS3 generation with contemporary passenger cars — strong real-world aftermarket coverage." },
-  { make:"Mercedes-Benz", model:"Sprinter (VS30 platform, W907/W910, 2018/2019+)",
+  { make:"Mercedes-Benz", model:"Sprinter (VS30 platform, W907/W910, 2018/2019+)", models:["Sprinter"],
     blade:"Unconfirmed — verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"FBS4/DAS4 — same dealer-dependency as passenger FBS4", autel:"no", xhorse:"no"},
     akl:{method:"Dealer-dependent", autel:"no", xhorse:"no"},
     note:"⚠ High-value warning — this is a huge-volume UK commercial van and it has quietly moved to FBS4. Any Sprinter from ~2019 on cannot be treated the same as the older FBS3 W906 you may be used to; confirm generation by VIN/chassis before promising a job." },
-  { make:"Mercedes-Benz", model:"Vito / V-Class, W447 (2014+)",
+  { make:"Mercedes-Benz", model:"Vito / V-Class, W447 (2014+)", models:["Vito","V-Class"],
     blade:"Unconfirmed — verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"FBS4 from launch per one specialist source (a second UK source conflictingly describes early W447 as FBS3) — verify on-car", autel:"check", xhorse:"check"},
     akl:{method:"If genuinely FBS4 (majority view) — dealer/specialist-only, same as passenger FBS4", autel:"no", xhorse:"no"},
     note:"Sources conflict on early-2014 builds specifically — resolve with a physical VIN/EIS check rather than assuming either way. One specialist explicitly does NOT offer key programming on this van at all, a strong signal it's a genuinely hard job." },
-  { make:"Mercedes-Benz", model:"Vito, W639 (2003–2014)",
+  { make:"Mercedes-Benz", model:"Vito, W639 (2003–2014)", models:["Vito"],
     blade:"HU64 (by inference from platform-sharing, unconfirmed)", lishi:"HU64 (unconfirmed)", lishiOwned:"yes",
     add:{method:"OBD/Bench per era, consistent with passenger-car equivalents", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD/Bench per era", autel:"yes", xhorse:"yes"},
     bench:["xdkp30","vvdi_prog_ezs"],
     note:"High confidence given FBS2/FBS3-era maturity on both tools, though not independently confirmed line-by-line for this van." },
 
-  { make:"Smart", model:"City-Coupe / Fortwo, Type 450 (1998–2007)",
+  { make:"Smart", model:"City-Coupe / Fortwo, Type 450 (1998–2007)", models:["Fortwo"],
     blade:"Unconfirmed — verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Unconfirmed — low volume, thin documentation", autel:"check", xhorse:"check"},
     akl:{method:"Unconfirmed", autel:"check", xhorse:"check"},
     note:"Mercedes-derived basic transponder immobiliser (Smart was a Mercedes/Daimler brand throughout this era). Treat any job as requiring live verification." },
-  { make:"Smart", model:"Fortwo, Type 451 (2007–2015)",
+  { make:"Smart", model:"Fortwo, Type 451 (2007–2015)", models:["Fortwo"],
     blade:"Likely VA2 profile (unconfirmed, one source instead references a Lishi YM23 tool)", lishi:"YM23 or VA2 — genuinely unconfirmed which, verify physically before ordering", lishiOwned:"no",
     add:{method:"Title-confirmed Autel AKL article exists — detail unconfirmed", autel:"yes", xhorse:"check"},
     akl:{method:"Title-confirmed capability exists on Autel — verify OBD-vs-bench live before the job", autel:"yes", xhorse:"check"},
     note:"Mercedes-derived EIS-type immobiliser, contemporary with Mercedes FBS2/early-FBS3." },
-  { make:"Smart", model:"Fortwo/Forfour, Type 453 (2014+) — Renault Twingo III platform",
+  { make:"Smart", model:"Fortwo/Forfour, Type 453 (2014+) — Renault Twingo III platform", models:["Fortwo","Forfour"],
     blade:"VA2 — field-confirmed on a 2017 Forfour (some suppliers cross-reference the same cut as VA6)", lishi:"VA2T — likely fits (Lishi VA2T is confirmed to cover Renault Twingo 2007–2024 door locks, which this shares parts with) but not independently confirmed for the Smart badge specifically — verify physically", lishiOwned:"close",
     add:{method:"check-live-list under Renault coverage", autel:"check", xhorse:"check"},
     akl:{method:"OBD in principle, but no confirmed Xhorse Key Tool Plus coverage found — the trade specifically uses OBDSTAR X300 DP Plus (documented, but its own AKL function is labelled 'Beta' with real pincode-read-failure/no-start risk) or a dedicated Abrites AVDI RR019 software module built specifically for Twingo III/Smart 453. No source found showing Key Tool Plus or Autel doing this job.", autel:"no", xhorse:"no"},
     note:"⚠ CRITICAL PLATFORM NOTE — this generation is built on the Renault Twingo III platform (Renault-Daimler co-development), NOT a Mercedes FBS-family immobiliser. Do NOT reach for Mercedes-specific dongles/workflows (VVDI MB, FBS-anything) — check your tools' Renault vehicle coverage lists instead. Blade confirmed VA2 on a real 2017 job (19 Aug 2026) — you stock this (part AUTKB011); VA6 is NOT stocked, so if a supplier's cut chart calls it VA6 instead, check the physical key against your VA2 blank before cutting rather than assuming they're identical. AKL checked live (19 Aug 2026): the specific tools documented for Smart 453/Twingo III all-keys-lost are OBDSTAR X300 DP Plus and Abrites AVDI (RR019 software) — the existence of a dedicated Abrites module for this exact model is itself a strong signal that Key Tool Plus doesn't handle it cleanly. If it's a spare-key add job (you still have one working key), that's a different, easier function — check that separately rather than assuming AKL-level difficulty." },
 
   // ================= TOYOTA / LEXUS =================
-  { make:"Toyota/Lexus", model:"Pre-2016 (Corolla, Yaris, Avensis, Auris, Camry/Reiz — 4D chip)",
+  { make:"Toyota/Lexus", model:"Pre-2016 (Corolla, Yaris, Avensis, Auris, Camry/Reiz — 4D chip)", models:["Corolla","Yaris","Avensis","Auris","Camry"],
     blade:"TOY43 (or TOY43AT on Camry/Reiz/some Corolla)", lishi:"TOY43 / TOY43AT", lishiOwned:"close",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
     note:"A strong point for both tools; AKL may need a ~20-minute immobiliser relearn wait. You own TOY43AT, not plain TOY43 — covers Camry/Reiz/most Corolla, but check fit on other models." },
-  { make:"Toyota/Lexus", model:"Aygo / Citroën C1 / Peugeot 107 — Gen 1 (2005–2014, PSA-shared platform)",
+  { make:"Toyota/Lexus", model:"Aygo / Citroën C1 / Peugeot 107 — Gen 1 (2005–2014, PSA-shared platform)", models:["Aygo"],
     blade:"TOY48", lishi:"TOY48", lishiOwned:"yes",
     add:{method:"OBD possible if a working key exists (module doesn't need removing)", autel:"check", xhorse:"check"},
     akl:{method:"Bench required — module removal from around the steering wheel, NOT an OBD job", autel:"no", xhorse:"no"},
     note:"⚠ IMPORTANT TRAP — this is a genuine PSA/Toyota joint-platform car (built at TPCA, Czech Republic), sharing PSA-style immobiliser architecture, not standard Toyota TIS/H-chip logic." },
-  { make:"Toyota/Lexus", model:"Aygo / Citroën C1 / Peugeot 107-108 — Gen 2 (2014–2020, same PSA-shared platform)",
+  { make:"Toyota/Lexus", model:"Aygo / Citroën C1 / Peugeot 107-108 — Gen 2 (2014–2020, same PSA-shared platform)", models:["Aygo"],
     blade:"TOY48", lishi:"TOY48 (can also decode wafers directly off the lock if no keys present)", lishiOwned:"yes",
     add:{method:"Likely simpler if a working key exists", autel:"check", xhorse:"check"},
     akl:{method:"Not a clean OBD job — Autel needs G-Box + KM100 + dash access (semi-bench); Xhorse route documented uses VVDI Prog + Tango, not Key Tool Plus alone", autel:"partial", xhorse:"check"},
     note:"Chip caveat: only original 4D70 chips work reliably — Xhorse Super Chip XT27A / VVDI2 4D70-clone chips reportedly fail on this platform (workaround: program one original key via Tango, then clone to XT27)." },
-  { make:"Toyota/Lexus", model:"Proace (2013+, rebadged Peugeot Expert/Citroën Jumpy-Dispatch)",
+  { make:"Toyota/Lexus", model:"Proace (2013+, rebadged Peugeot Expert/Citroën Jumpy-Dispatch)", models:["Proace"],
     blade:"Unconfirmed — do NOT use a TOYxx code, expect PSA-family (HU83/VA2/NE73-style)", lishi:"Unconfirmed — likely a PSA-family pick, not a Toyota one", lishiOwned:"no",
     add:{method:"Treat as a PSA job — check under Peugeot/Citroen coverage, not Toyota", autel:"check", xhorse:"check"},
     akl:{method:"Bench/dealer-diagnostic common on this PSA platform", autel:"check", xhorse:"check"},
     note:"⚠ The single biggest 'don't assume it's a normal Toyota' trap in the Toyota range — same badge-engineered van as Peugeot Expert/Citroën Dispatch/Fiat Scudo/Vauxhall Vivaro." },
-  { make:"Toyota/Lexus", model:"Hilux (pre-2016 mechanical / 2016+ smart-key / 2020+ 8A) and Land Cruiser/Prado (mechanical / smart-key / 300-series 8A)",
+  { make:"Toyota/Lexus", model:"Hilux (pre-2016 mechanical / 2016+ smart-key / 2020+ 8A) and Land Cruiser/Prado (mechanical / smart-key / 300-series 8A)", models:["Hilux","Land Cruiser","Prado"],
     blade:"TOY43 (older mechanical) / TOY48 (2016+ smart-key and 8A insert)", lishi:"TOY43 / TOY48 (check generation)", lishiOwned:"close",
     add:{method:"OBD across all generations generally", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD with pass-code (older) — 8A AKL is an active documented job category via Lonsdor/Autel KM100, exact IM508S/KTP success rate check-live-list", autel:"partial", xhorse:"partial"},
     note:"Concrete commercial-volume model — the 8A generation (2020+) needs extra hardware beyond the base tablet on both platforms; not standalone IM508S/KTP jobs." },
-  { make:"Toyota/Lexus", model:"Prius Gen 3+ (2010+ Smart Key System)",
+  { make:"Toyota/Lexus", model:"Prius Gen 3+ (2010+ Smart Key System)", models:["Prius"],
     blade:"TOY48 (emergency insert, reasonably confident)", lishi:"TOY48", lishiOwned:"yes",
     add:{method:"OBD — TechStream 'Smart Code Registration' allows programming without an existing key present, once a valid pass code is entered", autel:"check", xhorse:"check"},
     akl:{method:"OBD — 'Smart Code Erasure' + pass-code + registration sequence (16-min countdown, needs fully-charged 12V battery) is dealer-documented; whether IM508S/KTP replicate this exact flow is check-live-list", autel:"check", xhorse:"check"},
     note:"Don't assume parity with dealer TechStream just because the concept is OBD-based — verify live." },
-  { make:"Toyota/Lexus", model:"2016+ smart key (H-chip AES — Corolla, RAV4, C-HR, Lexus IS/GS/RX/NX)",
+  { make:"Toyota/Lexus", model:"2016+ smart key (H-chip AES — Corolla, RAV4, C-HR, Lexus IS/GS/RX/NX)", models:["Corolla","RAV4","C-HR","IS","GS","RX","NX"],
     blade:"TOY48 (emergency insert)", lishi:"TOY48", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD (usually)", autel:"partial", xhorse:"partial"},
     note:"Mostly fine on OBD; a few of the very newest models need extra password calculation — check the specific model year. Lexus shares this exact chip-generation timing with Toyota, no offset." },
-  { make:"Toyota/Lexus", model:"Newest 2018+ vertical-milling / 8A generation (RAV4 off-road, newer Land Cruiser/Hilux, Camry, Highlander, Sienna, Corolla, Levin, Venza, Lexus RX/NX/ES/IS/LS/LX)",
+  { make:"Toyota/Lexus", model:"Newest 2018+ vertical-milling / 8A generation (RAV4 off-road, newer Land Cruiser/Hilux, Camry, Highlander, Sienna, Corolla, Levin, Venza, Lexus RX/NX/ES/IS/LS/LX)", models:["RAV4","Land Cruiser","Hilux","Camry","Highlander","Sienna","Corolla","Levin","Venza","RX","NX","ES","IS","LS","LX"],
     blade:"TOY48-style insert (the 'TOY2018'/'TOY2' naming could not be independently verified as a real industry-standard code distinct from TOY48 — treat as unconfirmed)", lishi:"TOY48 / TOY2018 / TOY2 (verify exact cut before ordering)", lishiOwned:"yes",
     add:{method:"OBD, adapter-dependent — Autel needs 8A cable + G-Box3 + APB112; Xhorse needs XDBASK/XD8ASKGL adapter", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD-with-adapter, same accessories as add-key", autel:"partial", xhorse:"partial"},
     note:"2018+ vertical-milling Toyota keys need a different pick to the standard TOY43/TOY48 — confirm cut style physically before you commit to a blank." },
 
   // ================= HONDA / ACURA =================
-  { make:"Honda", model:"Pre-2000 (earliest G-chip immobiliser era)",
+  { make:"Honda", model:"Pre-2000 (earliest G-chip immobiliser era)", models:["Pre-2000 range"],
     blade:"Unconfirmed — pre-1996 may use an older profile not covered by modern HON66 tooling", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Largely not realistically serviceable with modern tools", autel:"no", xhorse:"no"},
     akl:{method:"Bench/specialist/obsolete-tool territory", autel:"no", xhorse:"no"},
     note:"Very low UK locksmith demand given vehicle age — deprioritised." },
-  { make:"Honda", model:"Pre-2010 (Civic, CR-V, Jazz, Accord, Fit, CR-Z, Insight — turn-key-start HON66)",
+  { make:"Honda", model:"Pre-2010 (Civic, CR-V, Jazz, Accord, Fit, CR-Z, Insight — turn-key-start HON66)", models:["Civic","CR-V","Jazz","Accord","Fit","CR-Z","Insight"],
     blade:"HON66", lishi:"HON66 (also sold as HO01/HON66)", lishiOwned:"yes",
     add:{method:"OBD confirmed for turn-key-start models with ≥1 working key (excludes push-button-start variants, which need a different procedure)", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench typically required when no working key exists", autel:"partial", xhorse:"partial"},
     note:"Older Honda AKL often needs an EEPROM/bench read; add-key is a straightforward, well-documented OBD job." },
-  { make:"Honda", model:"2016+ smart key (Civic, CR-V, Jazz, Accord — 10th-gen and contemporaries)",
+  { make:"Honda", model:"2016+ smart key (Civic, CR-V, Jazz, Accord — 10th-gen and contemporaries)", models:["Civic","CR-V","Jazz","Accord"],
     blade:"HON66 (emergency insert)", lishi:"HON66", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD — well documented and confirmed on both, more confidently sourced than most entries in this dataset", autel:"yes", xhorse:"yes"},
     note:"Well supported on both tools." },
-  { make:"Honda", model:"2022+ Civic / HR-V / Accord — redesigned rolling-code system",
+  { make:"Honda", model:"2022+ Civic / HR-V / Accord — redesigned rolling-code system", models:["Civic","HR-V","Accord"],
     blade:"HON66 insert likely still applies (unconfirmed whether it affects Lishi pick compatibility)", lishi:"HON66 (unconfirmed for this generation)", lishiOwned:"yes",
     add:{method:"check-live-list — genuine architecture change, do not treat as routine 'same as 2016+'", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list — see bricking-risk note", autel:"check", xhorse:"check"},
     note:"⚠ Honda redesigned the keyless-entry rolling-code system from the 2022 Civic/Accord onward (codes now expire immediately, anti-RollingPWN). Industry content exists specifically warning of BCM-bricking risk if programmed incorrectly on this generation — verify latest firmware/procedure notes before attempting, don't treat as routine." },
-  { make:"Acura", model:"RSX (2002–2006) and same-era Honda-shared-platform models",
+  { make:"Acura", model:"RSX (2002–2006) and same-era Honda-shared-platform models", models:["RSX"],
     blade:"HON66 (likely, unconfirmed)", lishi:"HON66 (unconfirmed)", lishiOwned:"yes",
     add:{method:"OBD but dealer-gated — Acura dealer must generate an immobiliser code via VIN through Honda's backend before HDS can act; not something generic aftermarket tools have historically replicated", autel:"check", xhorse:"check"},
     akl:{method:"Same dealer-code dependency — treat as a red flag worth testing before quoting", autel:"check", xhorse:"check"},
     note:"Low UK relevance — private/personal imports only." },
-  { make:"Acura", model:"Smart-key models (2015+, TLX/MDX/RDX)",
+  { make:"Acura", model:"Smart-key models (2015+, TLX/MDX/RDX)", models:["TLX","MDX","RDX"],
     blade:"HON66", lishi:"HON66", lishiOwned:"yes",
     add:{method:"Assumed similar to Honda's 2016+ smart-key profile — no direct Acura-specific tutorial found", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     note:"2022+ Acura MDX falls under the same new-rolling-code architecture as 2022+ Honda Civic/Accord — same bricking-risk caveat applies. Low UK relevance." },
 
   // ================= NISSAN / INFINITI =================
-  { make:"Nissan", model:"Qashqai J10 (Gen 1, 2007–2013) — old-type keyless system",
+  { make:"Nissan", model:"Qashqai J10 (Gen 1, 2007–2013) — old-type keyless system", models:["Qashqai"],
     blade:"Unconfirmed — likely NSN14 family, not confirmed for J10 specifically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"OBD (confirmed: Immo learning → Blade Key learning)", autel:"yes", xhorse:"check"},
     akl:{method:"OBD, same route", autel:"yes", xhorse:"check"},
     note:"⚠ NOT the same architecture as the 2010+ BCM family below — a fundamentally different 'old type keyless system with black keys'. Some J10 BCM part numbers are on a blacklist that can BRICK the module during key learning — always check BCM part number against the current blacklist first, and follow the exact ignition-cycle sequence (often omitted from generic guides)." },
-  { make:"Nissan", model:"Qashqai J11 (2014–2021) / X-Trail T32 (2014+) / Navara D40/NP300 D23 — true BCM/Intelligent Key (4A chip)",
+  { make:"Nissan", model:"Qashqai J11 (2014–2021) / X-Trail T32 (2014+) / Navara D40/NP300 D23 — true BCM/Intelligent Key (4A chip)", models:["Qashqai","X-Trail","Navara"],
     blade:"NSN14", lishi:"NSN14", lishiOwned:"yes",
     add:{method:"OBD, automatic PIN calculation confirmed for Navara on Autel", autel:"yes", xhorse:"check"},
     akl:{method:"OBD, same route", autel:"yes", xhorse:"check"},
     note:"There are known 'BCM not working after programming' cases on Qashqai/X-Trail/Rogue smart-key BCMs — worth checking troubleshooting notes before quoting a job." },
-  { make:"Nissan", model:"Micra K13, Juke, Note (2010+, BCM)",
+  { make:"Nissan", model:"Micra K13, Juke, Note (2010+, BCM)", models:["Micra","Juke","Note"],
     blade:"NE72 / NSN14", lishi:"NE72 / NSN14", lishiOwned:"close",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
     note:"BCM PIN read over OBD is well supported. You own the NSN14 pick but not NE72 — check which cut this specific car needs before you commit." },
-  { make:"Nissan", model:"Older Micra K11/K12, Almera, Primera (pre-2010, ECM-based immobiliser)",
+  { make:"Nissan", model:"Older Micra K11/K12, Almera, Primera (pre-2010, ECM-based immobiliser)", models:["Micra","Almera","Primera"],
     blade:"NSN14 (2002+) — very early 1990s Micra may be NSN11 instead", lishi:"NSN14 (NSN11 not in your kit)", lishiOwned:"close",
     add:{method:"OBD (usually) / Bench on some older ECUs", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD (usually) / Bench on pre-2000 non-networked immobilisers", autel:"partial", xhorse:"partial"},
     note:"A 2002 Micra is right on the K11/K12 changeover — check the physical key/lock cut before assuming NSN14. True 1990s immobilisers can need a bench/EEPROM read instead." },
-  { make:"Nissan", model:"Leaf (ZE0 2011–2017 / AZE0-ZE1 2018+)",
+  { make:"Nissan", model:"Leaf (ZE0 2011–2017 / AZE0-ZE1 2018+)", models:["Leaf"],
     blade:"Unconfirmed — likely NSN14 given shared Intelligent Key architecture, not confirmed", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Unconfirmed — no locksmith-specific programming writeup found", autel:"check", xhorse:"check"},
     akl:{method:"Unconfirmed", autel:"check", xhorse:"check"},
     note:"Do not assume EV-specific quirks without testing — genuine research gap, close it with a live vehicle or coverage-list check before quoting." },
-  { make:"Infiniti", model:"Q30 / QX30 (2015–2019, UK-built at Sunderland — Mercedes MFA platform, NOT Nissan)",
+  { make:"Infiniti", model:"Q30 / QX30 (2015–2019, UK-built at Sunderland — Mercedes MFA platform, NOT Nissan)", models:["Q30","QX30"],
     blade:"Unconfirmed — do NOT assume NSN14 despite the shared UK factory", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Unconfirmed — needs direct verification", autel:"check", xhorse:"check"},
     akl:{method:"Unconfirmed", autel:"check", xhorse:"check"},
     note:"⚠ Built on the Mercedes-Benz MFA platform (shared with A-Class/GLA), strongly suggesting Mercedes-derived electronics despite being built in the same factory as Qashqai — a trap if a technician assumes 'it's a Nissan so it's NSN14'." },
-  { make:"Infiniti", model:"Q50 (2013+), Q70/M (2010+), QX70/FX (2008+) — genuine Nissan-platform (Skyline/Fuga/FX-based)",
+  { make:"Infiniti", model:"Q50 (2013+), Q70/M (2010+), QX70/FX (2008+) — genuine Nissan-platform (Skyline/Fuga/FX-based)", models:["Q50","Q70","QX70"],
     blade:"Unconfirmed — plausibly NSN14 family given Nissan-platform origin, not directly confirmed", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"check-live-list", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     note:"UK volume is very low (brand discontinued in Europe 2020) — deprioritise unless a specific job comes in." },
 
   // ================= MAZDA / SUBARU =================
-  { make:"Mazda", model:"Mazda 3 (BK, 2003–2009) / Mazda 6 (GG, 2002–2007) / Mazda 2 (DY, 2003–2007) — pre-smart-key",
+  { make:"Mazda", model:"Mazda 3 (BK, 2003–2009) / Mazda 6 (GG, 2002–2007) / Mazda 2 (DY, 2003–2007) — pre-smart-key", models:["Mazda 3","Mazda 6","Mazda 2"],
     blade:"Unconfirmed — likely MZ31 or MZ19 family (Mazda/Ford-shared era), do not quote a blade code without checking the physical key", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Onboard/self programming not available — dedicated equipment required", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     note:"Genuine research gap — MZ31 vs MZ19 vs MAZ24R application by exact model/year could not be confirmed this pass." },
-  { make:"Mazda", model:"Mazda 2/3/6, CX-5, CX-3, CX-30 (2010/2012+ smart-key era)",
+  { make:"Mazda", model:"Mazda 2/3/6, CX-5, CX-3, CX-30 (2010/2012+ smart-key era)", models:["Mazda 2","Mazda 3","Mazda 6","CX-5","CX-3","CX-30"],
     blade:"MAZ24R", lishi:"MAZ24 / MAZDA(2014) for 2014+ models", lishiOwned:"yes",
     add:{method:"OBD", autel:"check", xhorse:"yes"},
     akl:{method:"OBD (usually)", autel:"partial", xhorse:"partial"},
     note:"BCM PIN read generally works over OBD; some newer smart-key CX models need bench — check by exact model year. Your Lishi is MAZ24 (no R) — same family as the MAZ24R blade you stock, but for 2014+ models use the dedicated MAZDA(2014) pick instead." },
-  { make:"Mazda", model:"MX-5 ND (2015+, smart-key)",
+  { make:"Mazda", model:"MX-5 ND (2015+, smart-key)", models:["MX-5"],
     blade:"MAZ24R (inferred, strongly likely, not separately confirmed for MX-5)", lishi:"MAZ24 / MAZDA(2014)", lishiOwned:"yes",
     add:{method:"OBD — a documented Xhorse support article exists titled 'How to Resolve Mazda MX-5 Smart Key Adding Failure' confirming Key Tool Plus CAN add MX-5 keys but has a known failure mode/workaround", autel:"check", xhorse:"partial"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     note:"Budget extra diagnostic time on MX-5 ND add-key jobs and look up the Xhorse workaround before starting." },
-  { make:"Subaru", model:"2005–2009 (Forester SG, Impreza GD/GE, Legacy BL/BP) — selective immobiliser rollout",
+  { make:"Subaru", model:"2005–2009 (Forester SG, Impreza GD/GE, Legacy BL/BP) — selective immobiliser rollout", models:["Forester","Impreza","Legacy"],
     blade:"DAT17 (likely for equipped trims, unconfirmed exact year cutoff)", lishi:"DAT17 (unconfirmed for this era)", lishiOwned:"no",
     add:{method:"Historically dealer SDS-required; modern OBD support unconfirmed for this era", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     note:"Subaru did not fit immobilisers as standard before 2005 — check individual VIN/trim, some cars this era have none fitted." },
-  { make:"Subaru", model:"2009–2021 (Forester SH/SJ/SK, Impreza GH/GJ/GT, Legacy/Outback BM/BR/BS, XV, Crosstrek, WRX, Levorg)",
+  { make:"Subaru", model:"2009–2021 (Forester SH/SJ/SK, Impreza GH/GJ/GT, Legacy/Outback BM/BR/BS, XV, Crosstrek, WRX, Levorg)", models:["Forester","Impreza","Legacy","Outback","XV","Crosstrek","WRX","Levorg"],
     blade:"DAT17", lishi:"DAT17 (5-cut 2-in-1)", lishiOwned:"no",
     add:{method:"OBD — confirmed for 2018 Outback via Autel IM508 (Immobilizer → Auto identify → remote learning → Add key)", autel:"yes", xhorse:"check"},
     akl:{method:"OBD — confirmed for 2020-2021 range via Autel: 'reset smart box' (15-min horn-relay-pull) then 'add/register key'", autel:"yes", xhorse:"check"},
     note:"⚠ CORRECTS a prior assumption — Subaru does NOT share Nissan/Toyota immobiliser architecture, it's a proprietary Subaru system with its own DAT17 blade (historically dealer-SDS-only, now OBD-supported by Autel for 2012-2021). You don't currently stock the DAT17 blade or pick — order before a job." },
-  { make:"Subaru", model:"BRZ (2012+) — Toyota GT86-derived platform",
+  { make:"Subaru", model:"BRZ (2012+) — Toyota GT86-derived platform", models:["BRZ"],
     blade:"Unconfirmed — plausibly Toyota-family (TOY48/TOY43), do NOT assume DAT17", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"check-live-list under Toyota coverage, by platform inference", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     note:"The one real Subaru/Toyota crossover case — co-developed with Toyota GT86/86. Verify physically before quoting." },
 
   // ================= MITSUBISHI / SUZUKI / ISUZU =================
-  { make:"Mitsubishi", model:"ASX, Outlander, Colt, Lancer (2005+, CAN-equipped 2007+)",
+  { make:"Mitsubishi", model:"ASX, Outlander, Colt, Lancer (2005+, CAN-equipped 2007+)", models:["ASX","Outlander","Colt","Lancer"],
     blade:"MIT8 / MIT11", lishi:"MIT8 / MIT11", lishiOwned:"yes",
     add:{method:"OBD (confirmed generically via official OBD-MIT02-05/13/14/18 codes)", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD (usually) / Bench on older", autel:"partial", xhorse:"partial"},
     note:"Blade MIT8 (older mechanical-blade remotes) vs MIT11 (newer ID47/smart-key trims) split likely mirrors the L200 pattern below — not separately confirmed per exact Outlander/ASX year, verify physically." },
-  { make:"Mitsubishi", model:"Shogun/Pajero (2007+, CAN-equipped)",
+  { make:"Mitsubishi", model:"Shogun/Pajero (2007+, CAN-equipped)", models:["Shogun/Pajero"],
     blade:"MIT8 (older/mechanical) or MIT11(R) (newer smart-key) — verify physically", lishi:"MIT8 / MIT11", lishiOwned:"yes",
     add:{method:"OBD (confirmed generically via OBD-MIT16)", autel:"check", xhorse:"check"},
     akl:{method:"OBD generically expected, not separately confirmed", autel:"check", xhorse:"check"},
     note:"Likely mirrors the L200/Triton pattern since they share underpinnings." },
-  { make:"Mitsubishi", model:"Shogun/Pajero pre-2007 (non-CAN)",
+  { make:"Mitsubishi", model:"Shogun/Pajero pre-2007 (non-CAN)", models:["Shogun/Pajero"],
     blade:"Unconfirmed — verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Predates CAN-based OBD coverage — may need older/legacy protocols or bench work", autel:"check", xhorse:"check"},
     akl:{method:"Unconfirmed", autel:"check", xhorse:"check"},
     note:"Low priority given age, but flagged rather than assumed covered." },
-  { make:"Mitsubishi", model:"L200/Triton Series 4 (pre-2015, 'MIT8' generation)",
+  { make:"Mitsubishi", model:"L200/Triton Series 4 (pre-2015, 'MIT8' generation)", models:["L200/Triton"],
     blade:"MIT8", lishi:"MIT8", lishiOwned:"yes",
     add:{method:"OBD (confirmed via official OBD-MIT06-10 codes, PCF7936 chip)", autel:"check", xhorse:"check"},
     akl:{method:"Mixed — OBD not always sufficient, a bench 24C02 EEPROM-dump workaround is documented/needed on some jobs when PIN/OBD routes are blocked", autel:"check", xhorse:"partial"},
     note:"Budget for the possibility of needing a bench EEPROM read on L200 AKL even though add-key is straightforward OBD — a very common UK commercial vehicle." },
-  { make:"Mitsubishi", model:"L200/Triton Series 5 (2015+, smart-key trims)",
+  { make:"Mitsubishi", model:"L200/Triton Series 5 (2015+, smart-key trims)", models:["L200/Triton"],
     blade:"MIT11 / MIT11R", lishi:"MIT11", lishiOwned:"yes",
     add:{method:"OBD, generically expected continuing the OBD-MIT08-10 pattern", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list — same bench-workaround caveat as the older generation may still apply", autel:"check", xhorse:"check"},
     note:"You own the MIT11 pick; MIT11R is the same keyway family (not confirmed as needing a separate physical tool)." },
-  { make:"Suzuki", model:"Jimny JB23/JB43 (older generations, pre-2018)",
+  { make:"Suzuki", model:"Jimny JB23/JB43 (older generations, pre-2018)", models:["Jimny"],
     blade:"HU87", lishi:"HU87", lishiOwned:"yes",
     add:{method:"OBD (usually)", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD (usually) / Bench on older", autel:"partial", xhorse:"partial"},
     note:"Basic transponder generation, consistent with your existing kit." },
-  { make:"Suzuki", model:"Swift, SX4, Vitara/Grand Vitara (2005+, transponder/smart-key)",
+  { make:"Suzuki", model:"Swift, SX4, Vitara/Grand Vitara (2005+, transponder/smart-key)", models:["Swift","SX4","Vitara","Grand Vitara"],
     blade:"HU133 / HU133R (dominant blade for most 2005+ Suzuki) — HU87 on some older/base variants", lishi:"HU87/HU133 combined tool exists — you only stock the HU87 side", lishiOwned:"close",
     add:{method:"OBD confirmed for smart-key-equipped models; simpler separate-key models were owner-DIY-programmable in some years", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list — some 2021+ Vitara jobs report BCM-programming difficulty beyond a clean OBD route", autel:"check", xhorse:"check"},
     note:"CORRECTION — Suzuki actually uses two distinct blade families (HU87 older/basic, HU133/HU133R dominant on 2005+ transponder and smart-key models), not one single HU87 code. You don't stock HU133/HU133R." },
-  { make:"Suzuki", model:"Jimny JB74 (4th generation, 2018+, current — popular UK model)",
+  { make:"Suzuki", model:"Jimny JB74 (4th generation, 2018+, current — popular UK model)", models:["Jimny"],
     blade:"HU87 or HU133R (verify physically which — likely HU133R as the smart/proximity-capable variant)", lishi:"HU87/HU133R combined tool — confirm you have the current-revision tool, not an older HU87-only one", lishiOwned:"close",
     add:{method:"OBD expected (professional tool required)", autel:"check", xhorse:"check"},
     akl:{method:"Genuine gap — no direct Autel/Xhorse source found for this specific popular current model", autel:"check", xhorse:"check"},
     note:"Strongly recommend a dedicated follow-up check ('Jimny JB74 all keys lost Autel/Xhorse') given how common and current this model is in the UK right now." },
-  { make:"Isuzu", model:"D-Max (2012–2020, RT50/2nd-3rd facelift)",
+  { make:"Isuzu", model:"D-Max (2012–2020, RT50/2nd-3rd facelift)", models:["D-Max"],
     blade:"TOY43R", lishi:"TOY43R", lishiOwned:"no",
     add:{method:"OBD — confirmed via a dedicated Lonsdor tutorial; IM508S/KTP-specific success not independently confirmed", autel:"check", xhorse:"check"},
     akl:{method:"Bench required — EEPROM read on the bench, consistent with the newer-generation pattern below", autel:"check", xhorse:"check"},
     note:"TOY43R is a Toyota-adjacent/GM-adjacent blade family — a DIFFERENT product from your stocked plain TOY43, do not assume it fits." },
-  { make:"Isuzu", model:"D-Max (2020/2021+, current generation — high UK commercial-vehicle priority)",
+  { make:"Isuzu", model:"D-Max (2020/2021+, current generation — high UK commercial-vehicle priority)", models:["D-Max"],
     blade:"TOY43R", lishi:"TOY43R", lishiOwned:"no",
     add:{method:"OBD, standard function when ≥1 working key present — Autel IM508 directly confirmed", autel:"yes", xhorse:"check"},
     akl:{method:"Bench + OBD hybrid, directly and concretely confirmed: (1) bench-read the 24c08 EEPROM behind the instrument cluster to extract the PIN, (2) OBD key-learning using the extracted PIN — Autel IM508/IM608 explicitly named for step 2", autel:"yes", xhorse:"check"},
     note:"One of the most concretely-sourced findings in this whole research pass — very actionable for a UK commercial locksmith. You don't stock the TOY43R blade/pick — order before a job." },
 
   // ================= HYUNDAI / KIA / GENESIS / SSANGYONG =================
-  { make:"Hyundai/Kia", model:"Pre-2020 (i10/i20/i30, Ceed, Sportage)",
+  { make:"Hyundai/Kia", model:"Pre-2020 (i10/i20/i30, Ceed, Sportage)", models:["i10","i20","i30","Ceed","Sportage"],
     blade:"HY15", lishi:"HY15", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
     note:"PIN read over OBD is reliable on this generation." },
-  { make:"Hyundai/Kia", model:"Tucson/ix35, i30/Elantra-family; Kia Cerato/Ceed",
+  { make:"Hyundai/Kia", model:"Tucson/ix35, i30/Elantra-family; Kia Cerato/Ceed", models:["Tucson","ix35","i30","Elantra","Cerato","Ceed"],
     blade:"HYN11 (or K5 for Korea-market K2/K3/K5, 2017 Verna, ix35)", lishi:"HYN11 / K5", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD (usually)", autel:"partial", xhorse:"partial"},
     note:"Tucson/ix35 is a common UK job — HYN11 is the usual pick, K5 covers some ix35/Verna variants with internal milling." },
-  { make:"Hyundai/Kia", model:"Sonata and similar (HYN7R family)",
+  { make:"Hyundai/Kia", model:"Sonata and similar (HYN7R family)", models:["Sonata"],
     blade:"HYN7R", lishi:"HYN7R", lishiOwned:"yes",
     add:{method:"OBD", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD (usually)", autel:"partial", xhorse:"partial"},
     note:"Less common in UK than Tucson/i30, but you're covered if it comes up." },
-  { make:"Hyundai/Kia", model:"2009–2014 HS transition blade (older i30/ix35/ix45, Kia K5/older Optima)",
+  { make:"Hyundai/Kia", model:"2009–2014 HS transition blade (older i30/ix35/ix45, Kia K5/older Optima)", models:["i30","ix35","ix45","K5","Optima"],
     blade:"HY22", lishi:"HY22", lishiOwned:"yes",
     add:{method:"OBD", autel:"check", xhorse:"check"},
     akl:{method:"OBD (usually)", autel:"check", xhorse:"check"},
     note:"⚠ This is the CORRECT meaning of HY22 — an older 2009-2014 transition blade, not the modern smart-key blade (that's KK12, see below). The prior data had this backwards." },
-  { make:"Hyundai/Kia", model:"2017/2019+ smart-key range (Ioniq, Tucson NX4, Santa Fe TM/MX5, Kona, Sportage QL/NQ5, Sorento MQ4, Niro/Niro EV, Kia Stinger/K900/Carnival)",
+  { make:"Hyundai/Kia", model:"2017/2019+ smart-key range (Ioniq, Tucson NX4, Santa Fe TM/MX5, Kona, Sportage QL/NQ5, Sorento MQ4, Niro/Niro EV, Kia Stinger/K900/Carnival)", models:["Ioniq","Tucson","Santa Fe","Kona","Sportage","Sorento","Niro","Stinger","K900","Carnival"],
     blade:"KK12 (emergency insert)", lishi:"KK12 — NOT in your current 32-item Lishi kit, order before a job needing decoding", lishiOwned:"no",
     add:{method:"OBD", autel:"yes", xhorse:"check"},
     akl:{method:"OBD — but Autel has a documented failure mode on this generation ('smart key condition not met'); workaround is Diagnostics→Hot Functions→IMMO Keys→SMK→Add a Key instead of the normal IMMO wizard. Sportage 2022-2024 AKL may need a KM100 emulator paired with the IM508/IM608, not the tablet alone.", autel:"yes", xhorse:"check"},
     note:"⚠ CRITICAL CORRECTION to the prior data — KK12 is the blade fitted to essentially the entire modern Hyundai/Kia/Genesis smart-key range from ~2017-2019 onward, not HY22 (which is the older 2009-2014 transition blade — see separate entry above)." },
-  { make:"Hyundai/Kia", model:"E-GMP dedicated EV platform — Ioniq 5 (2022+), EV6 (2021+)",
+  { make:"Hyundai/Kia", model:"E-GMP dedicated EV platform — Ioniq 5 (2022+), EV6 (2021+)", models:["Ioniq 5","EV6"],
     blade:"KK12 (emergency insert, confirmed on parts listings)", lishi:"KK12 — not in your kit", lishiOwned:"no",
     add:{method:"check-live-list — likely OBD for add-key with a working key present", autel:"check", xhorse:"check"},
     akl:{method:"Likely bench or dealer-only — one source states no OBD PIN extraction is supported on Ioniq 5's AES-256 IMMO5 system; requires factory GDS software/dealer authorisation in most cases", autel:"check", xhorse:"check"},
     note:"Flag as high-difficulty/EV-specific — do not quote firm pricing/turnaround without confirming current tool coverage on the day. EV6's chip listing (ID4A) vs Ioniq 5's claimed AES-256 is an unresolved discrepancy in the research — treat both as hard jobs regardless." },
-  { make:"Genesis", model:"G70 / G80 / GV70 / GV80 (2020–present, UK from ~2021)",
+  { make:"Genesis", model:"G70 / G80 / GV70 / GV80 (2020–present, UK from ~2021)", models:["G70","G80","GV70","GV80"],
     blade:"KK12", lishi:"KK12 — not in your kit", lishiOwned:"no",
     add:{method:"OBD — a dedicated tutorial exists for G70 specifically; verify G70 vs G80/GV70/GV80 individually, coverage may not be uniform", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list — should in principle follow the same OBD pattern as Tucson/Santa Fe of the same era (including the SMK workaround), but this is an inference not a confirmed source", autel:"check", xhorse:"check"},
     note:"Rare, high-value UK job — Genesis-specific coverage in aftermarket tools tends to lag mainline Hyundai/Kia by months. Always verify against the live list on the day; assume dealer-only fallback is a live possibility." },
-  { make:"SsangYong/KGM", model:"Korando (C300, 2019+), Tivoli (2015+), Musso (2018+), Rexton (Y400, 2017+), incl. post-2023 KGM-branded models",
+  { make:"SsangYong/KGM", model:"Korando (C300, 2019+), Tivoli (2015+), Musso (2018+), Rexton (Y400, 2017+), incl. post-2023 KGM-branded models", models:["Korando","Tivoli","Musso","Rexton"],
     blade:"SSY3 (current generation) — older models (Actyon, Kyron, older Rexton/Musso pre-2010) use HYN10/HY16/HY18/HY20, unconfirmed which per exact model/year", lishi:"SSY3 (8-cut 2-in-1) — not in your kit", lishiOwned:"no",
     add:{method:"OBD generally reported possible, but specialist tools (Lonsdor K518ISE, OBDSTAR X300DP Plus) are what's specifically named in industry coverage for this brand, not Autel/Xhorse — do not assume coverage", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list / possibly no — same caution, older-gen AKL may need dedicated immobiliser-EEPROM/bench work", autel:"check", xhorse:"check"},
     note:"⚠ This is the weakest-coverage make in your toolset — low UK volume and apparent reliance on niche tools in industry coverage. Budget for occasional jobs needing a third specialist tool or dealer referral." },
 
   // ================= PEUGEOT / CITROEN / DS =================
-  { make:"Peugeot/Citroen", model:"106/206/306/older 406/Saxo/Xsara/older Berlingo/Xantia (pre-2004, Magneti Marelli/Sagem, no BSI)",
+  { make:"Peugeot/Citroen", model:"106/206/306/older 406/Saxo/Xsara/older Berlingo/Xantia (pre-2004, Magneti Marelli/Sagem, no BSI)", models:["106","206","306","406","Saxo","Xsara","Berlingo","Xantia"],
     blade:"NE72/NE73 (Peugeot 206) / SX9 (Citroen Saxo/older Partner/Berlingo) — model-specific, not a single code", lishi:"NE72/NE73 or SX9 depending on model", lishiOwned:"close",
     add:{method:"check-live-list", autel:"check", xhorse:"check"},
     akl:{method:"Bench, likely (pre-BSI architecture)", autel:"check", xhorse:"check"},
     note:"Very old fleet, low priority but still generates calls. You stock NE73 (close match to NE72) but not SX9 — verify exact model before ordering." },
-  { make:"Peugeot/Citroen", model:"207/308(Mk1)/508/2008/208/Expert (2006–2018) / C4-C4 Picasso/C5/C6/C8/C4 Cactus/C4 Aircross (2005–2024) — BSI gen 1/2",
+  { make:"Peugeot/Citroen", model:"207/308(Mk1)/508/2008/208/Expert (2006–2018) / C4-C4 Picasso/C5/C6/C8/C4 Cactus/C4 Aircross (2005–2024) — BSI gen 1/2", models:["207","308","508","2008","208","Expert","C4","C4 Picasso","C5","C6","C8","C4 Cactus","C4 Aircross"],
     blade:"HU83", lishi:"HU83", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench usually (BSI removal/dump), some 1-key-present OBD add possible", autel:"partial", xhorse:"partial"},
     note:"Confirms the prior baseline for this bucket." },
-  { make:"Peugeot/Citroen", model:"3008(2012-16)/407/5008(2009-15)/Partner(2009-16) / C1(2004+)/C2/C3 & Picasso/Berlingo(2002+) — VA2/VA2T family",
+  { make:"Peugeot/Citroen", model:"3008(2012-16)/407/5008(2009-15)/Partner(2009-16) / C1(2004+)/C2/C3 & Picasso/Berlingo(2002+) — VA2/VA2T family", models:["3008","407","5008","Partner","C1","C2","C3","Picasso","Berlingo"],
     blade:"VA2 (not HU83 — model-specific, not year-specific)", lishi:"VA2T", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench usually", autel:"partial", xhorse:"partial"},
     note:"IMPORTANT — blade choice on this generation is model-specific, not simply year-specific; verify by model. Same VA2T Lishi pick also fits Vauxhall/Opel Movano (2011-2024) and Vivaro (2014-2024) door locks, useful cross-reference." },
-  { make:"Peugeot/Citroen", model:"208/2008/308/408/508/3008/5008/Partner/Rifter/Traveller, Berlingo, C3/C3 Aircross/C4/C4X/C5/C5X/C5 Aircross, Jumpy/SpaceTourer — newest '4A' generation (2018–2026, incl. e- variants)",
+  { make:"Peugeot/Citroen", model:"208/2008/308/408/508/3008/5008/Partner/Rifter/Traveller, Berlingo, C3/C3 Aircross/C4/C4X/C5/C5X/C5 Aircross, Jumpy/SpaceTourer — newest '4A' generation (2018–2026, incl. e- variants)", models:["208","2008","308","408","508","3008","5008","Partner","Rifter","Traveller","Berlingo","C3","C3 Aircross","C4","C4X","C5","C5X","C5 Aircross","Jumpy","SpaceTourer"],
     blade:"Unconfirmed exact mechanical blade — likely HU83 emergency backup, verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"OBD, with adapter — requires XP400/XP400 Pro/XP1 Pro + Autel universal keys + APB112 smart key simulator, not a bare-tablet job", autel:"yes", xhorse:"check"},
     akl:{method:"OBD, with adapter — same hardware requirement", autel:"yes", xhorse:"check"},
     note:"Good news item — Autel explicitly lists Add Key + AKL support for this entire 2018-2026 range, a large chunk of current UK PSA fleet, but budget for the extra hardware beyond the base IM508S." },
-  { make:"Peugeot/Citroen", model:"Boxer/Relay (shared with Fiat Ducato) — 2006-2023+, Fiat-designed van platform NOT PSA BSI",
+  { make:"Peugeot/Citroen", model:"Boxer/Relay (shared with Fiat Ducato) — 2006-2023+, Fiat-designed van platform NOT PSA BSI", models:["Boxer","Relay"],
     blade:"SIP22", lishi:"SIP22", lishiOwned:"no",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"Bench typically for older years, OBD possible on newer (2020+) via IMMO/BCM procedure", autel:"partial", xhorse:"partial"},
     note:"⚠ Huge commercial volume — do not confuse with Partner/Berlingo/Expert which are true PSA-platform vans with different blades. You don't stock the SIP22 Lishi pick." },
-  { make:"Peugeot/Citroen", model:"Partner/Berlingo/Expert/Dispatch (true PSA van platform)",
+  { make:"Peugeot/Citroen", model:"Partner/Berlingo/Expert/Dispatch (true PSA van platform)", models:["Partner","Berlingo","Expert","Dispatch"],
     blade:"VA2 (2009-2016) / part of 4A range 2019+ (unconfirmed exact blade)", lishi:"Matches car-line equivalents above", lishiOwned:"yes",
     add:{method:"Same OBD/Bench split as equivalent-era passenger PSA cars", autel:"partial", xhorse:"partial"},
     akl:{method:"Same as equivalent-era passenger PSA cars", autel:"partial", xhorse:"partial"},
     note:"Expert/Dispatch also badge-shares with Toyota Proace and (pre-2016) Fiat Scudo/Talento — check whether it's the Fiat-based or PSA-based generation before choosing tooling." },
-  { make:"DS Automobiles", model:"DS3 (2010-15, as Citroen DS3) / DS4 (2011-15) / DS5 (2011-18) — pre-standalone-brand",
+  { make:"DS Automobiles", model:"DS3 (2010-15, as Citroen DS3) / DS4 (2011-15) / DS5 (2011-18) — pre-standalone-brand", models:["DS3","DS4","DS5"],
     blade:"Unconfirmed — expected HU83 based on same-era Citroen C4/Peugeot 208 pattern, not independently sourced", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Presumed same OBD/Bench pattern as Citroen C4/Peugeot 208 of the same years", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     note:"DS was a Citroen sub-brand until 2015 — not directly confirmed for DS-badged cars specifically." },
-  { make:"DS Automobiles", model:"DS 3 Crossback, DS 4 (2021+), DS 6, DS 7, DS 8, DS 9 — standalone brand, 2018-2026",
+  { make:"DS Automobiles", model:"DS 3 Crossback, DS 4 (2021+), DS 6, DS 7, DS 8, DS 9 — standalone brand, 2018-2026", models:["DS 3 Crossback","DS 4","DS 6","DS 7","DS 8","DS 9"],
     blade:"Unconfirmed, verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"OBD with adapter — DS explicitly named alongside Citroën in the same Autel 4A bulletin, needs XP400/XP1 Pro + APB112", autel:"yes", xhorse:"check"},
     akl:{method:"OBD with adapter, same hardware requirement", autel:"yes", xhorse:"check"},
     note:"Confirmed part of the same PSA/Stellantis 4A smart-key list as Peugeot/Citroen 4A generation." },
 
   // ================= RENAULT / DACIA =================
-  { make:"Renault", model:"Older pre-UCH — Clio II (1998-2012), Twingo I/II (1993-2007/2007-2014), Modus (2004-2012), older Megane/Scenic, Kangoo I",
+  { make:"Renault", model:"Older pre-UCH — Clio II (1998-2012), Twingo I/II (1993-2007/2007-2014), Modus (2004-2012), older Megane/Scenic, Kangoo I", models:["Clio","Twingo","Modus","Megane","Scenic","Kangoo"],
     blade:"VA2T (confirmed genuinely for Clio/Modus/Twingo specifically — legitimate cross-platform sharing from the old PSA-Renault parts era)", lishi:"VA2T", lishiOwned:"yes",
     add:{method:"Unconfirmed programming route for this pre-networked era", autel:"check", xhorse:"check"},
     akl:{method:"Unconfirmed", autel:"check", xhorse:"check"},
     note:"VA2T is real for these specific small/older Renault models — but do NOT extend it to Megane/Scenic/Captur/Kadjar/Talisman (see below, different blade)." },
-  { make:"Renault", model:"2010+ UCH generation — Clio III/IV, Megane III/IV, Scenic III, Captur I (2013-2019), Kadjar, Talisman, Espace V",
+  { make:"Renault", model:"2010+ UCH generation — Clio III/IV, Megane III/IV, Scenic III, Captur I (2013-2019), Kadjar, Talisman, Espace V", models:["Clio","Megane","Scenic","Captur","Kadjar","Talisman","Espace"],
     blade:"VAC102 (correction — not VA2T, which only covers the older small-Renault line above)", lishi:"VAC102 (or HU136 — cutover point unconfirmed, verify physically)", lishiOwned:"no",
     add:{method:"OBD — confirmed (Clio IV 2018 add-key success with IM508+XP400)", autel:"yes", xhorse:"check"},
     akl:{method:"⚠ NOT AVAILABLE on current Autel tool versions — Autel removed the Renault/Dacia AKL function in a software update; some older-model AKL success stories exist (e.g. 2016 Talisman) but current capability should be treated as unavailable pending restoration", autel:"no", xhorse:"check"},
     note:"Do not promise Renault AKL on the Autel IM508S without checking the current firmware/function list first — this directly hardens the prior flagged concern. You don't stock the VAC102/HU136 blade or pick." },
-  { make:"Renault", model:"Trafic III/Master III (2014+, shared with Vauxhall/Opel Vivaro/Movano, Nissan NV300/NV400)",
+  { make:"Renault", model:"Trafic III/Master III (2014+, shared with Vauxhall/Opel Vivaro/Movano, Nissan NV300/NV400)", models:["Trafic","Master"],
     blade:"VAC102 (confirmed via multiple product listings) — a separate HU136 tool also exists, exact cutover point unconfirmed", lishi:"VAC102 / HU136 (verify physically)", lishiOwned:"no",
     add:{method:"OBD (general UCH pattern)", autel:"yes", xhorse:"check"},
     akl:{method:"Bench/OBD depending on year — subject to the same Renault/Dacia AKL removal caveat above if firmware is shared", autel:"partial", xhorse:"check"},
     note:"Same physical lock/blade and electronic architecture as your Vauxhall Vivaro/Movano entries above — cross-reference." },
-  { make:"Renault", model:"Newest — Clio V (2019+), Captur II (2019+), Zoe (2019+) — Safety Gateway (SGW)",
+  { make:"Renault", model:"Newest — Clio V (2019+), Captur II (2019+), Zoe (2019+) — Safety Gateway (SGW)", models:["Clio","Captur","Zoe"],
     blade:"Unconfirmed — expect a newer laser/proximity emergency blade, possibly HU166/HU179 family, not confirmed for this exact generation", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"OBD, partial", autel:"partial", xhorse:"check"},
     akl:{method:"⚠ NOT SUPPORTED — a Safety Gateway blocks generic OBD scanners without a manufacturer-specific bypass adapter that neither Autel nor Xhorse currently has an equivalent for. OBDSTAR's proprietary 16+32 gateway cable is the currently-documented tool that can do this job", autel:"no", xhorse:"no"},
     note:"⚠ The single most important finding for newest-Renault tool-buying decisions — flag this generation as 'cannot currently AKL with your existing kit, subcontract or acquire OBDSTAR for this specific job.'" },
-  { make:"Dacia", model:"Sandero/Duster/Logan (all generations, particularly 2012+ Sandero II/Duster I-II/Logan II — Renault B0/CMF-B platform)",
+  { make:"Dacia", model:"Sandero/Duster/Logan (all generations, particularly 2012+ Sandero II/Duster I-II/Logan II — Renault B0/CMF-B platform)", models:["Sandero","Duster","Logan"],
     blade:"Unconfirmed exact code — likely VAC102 family per Renault parts-sharing, not independently confirmed", lishi:"Unconfirmed — likely VAC102/HU136 family", lishiOwned:"no",
     add:{method:"OBD — Autel confirmed for PIN/dump extraction via HFM read", autel:"yes", xhorse:"check"},
     akl:{method:"⚠ Autel IM508S ALONE CANNOT COMPLETE THIS — it can only read the HFM EEPROM/flash dump and extract the 28-digit PIN; a second tool (OBDSTAR X300 Classic G3) is required to actually write the AKL and program the key", autel:"partial", xhorse:"check"},
     note:"Plan for a two-tool workflow (Autel for PIN extraction + OBDSTAR for the write) on Dacia AKL jobs, or expect to turn the job away/subcontract until Autel restores the function — directly fills what was previously a total gap in the database." },
 
   // ================= FIAT / LANCIA / ALFA ROMEO / JEEP-CHRYSLER-DODGE =================
-  { make:"Fiat/Lancia", model:"Panda / Punto / 500 (2003–2015) / Doblo (old-shape, 2000+) / Ducato (2002+) / Fiorino / Bravo / Grande Punto — older BSI",
+  { make:"Fiat/Lancia", model:"Panda / Punto / 500 (2003–2015) / Doblo (old-shape, 2000+) / Ducato (2002+) / Fiorino / Bravo / Grande Punto — older BSI", models:["Panda","Punto","500","Doblo","Ducato","Fiorino","Bravo","Grande Punto"],
     blade:"SIP22", lishi:"SIP22", lishiOwned:"no",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD, confirmed working (not just 'usually') — 2011 and 2013 Fiat 500 AKL both confirmed successful with IM508/IM608 + XP400 Pro", autel:"yes", xhorse:"yes"},
     note:"Coverage is better than 'patchy' — treat this generation's AKL as a solid OBD job for both tools. Field warning: you MUST select 'relearn all keys' on add-key or existing keys get wiped. You stock the SIP22 blade but not the matching Lishi pick — order one before a job that needs decoding." },
-  { make:"Fiat/Lancia", model:"500X / Tipo (2015+) / old-shape Doblo continuing production",
+  { make:"Fiat/Lancia", model:"500X / Tipo (2015+) / old-shape Doblo continuing production", models:["500X","Tipo","Doblo"],
     blade:"SIP22 / HU83 (model dependent)", lishi:"SIP22 / HU83", lishiOwned:"close",
     add:{method:"OBD (if 1 key present)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench (usually)", autel:"partial", xhorse:"partial"},
     note:"Post-2015 Fiat vans/models built on shared PSA platforms behave like Peugeot/Citroen for AKL. You own the HU83 pick but not SIP22 — check which this specific model needs. 500X specifically also intersects the FN022 Abrites note below for 2020+ facelifts." },
-  { make:"Fiat/Lancia", model:"New-shape Doblo (2022+) — rebadged Stellantis PSA van, NOT the old Fiat-designed Doblo",
+  { make:"Fiat/Lancia", model:"New-shape Doblo (2022+) — rebadged Stellantis PSA van, NOT the old Fiat-designed Doblo", models:["Doblo"],
     blade:"Unconfirmed — follow the Citroen/Peugeot 4A generation entry, do NOT assume SIP22", lishi:"Unconfirmed — do not pull SIP22 stock without checking VIN/body style first", lishiOwned:"no",
     add:{method:"Same as Peugeot/Citroen 4A generation entries (Autel yes via XP400/APB112 kit)", autel:"yes", xhorse:"check"},
     akl:{method:"Same as Peugeot/Citroen 4A generation entries", autel:"yes", xhorse:"check"},
     note:"⚠ Significant trap for a locksmith assuming 'Fiat = SIP22' — mechanically identical to the new Citroën Berlingo/Peugeot Rifter/Vauxhall Combo E (EMP2/CMP van platform). Check body style/VIN before pulling SIP22 stock." },
-  { make:"Fiat/Lancia", model:"Lancia (any model) — negligible current UK relevance",
+  { make:"Fiat/Lancia", model:"Lancia (any model) — negligible current UK relevance", models:["Lancia (various)"],
     blade:"Unconfirmed — verify physically, treat pre-1994 classics as old-Fiat architecture (SIP22-era pattern) and Lancia Voyager (2011-2014) as Chrysler/Fiat Grand Voyager architecture", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Low/negligible UK relevance — verify import status before quoting", autel:"check", xhorse:"check"},
     akl:{method:"Low/negligible UK relevance", autel:"check", xhorse:"check"},
     note:"Lancia effectively exited UK retail in 1994. Any example encountered is a private import, pre-1994 classic, or the rare Lancia-badged Voyager (2011-2014). Not worth building a full model catalog for." },
-  { make:"Alfa Romeo", model:"147 (2000-2010), 156 (1997-2007), 166, GT (2003-2010)",
+  { make:"Alfa Romeo", model:"147 (2000-2010), 156 (1997-2007), 166, GT (2003-2010)", models:["147","156","166","GT"],
     blade:"GT15 (8-cut, confirmed distinct from SIP22)", lishi:"GT15", lishiOwned:"no",
     add:{method:"Unconfirmed OBD/Bench split — not sourced, verify physically", autel:"check", xhorse:"check"},
     akl:{method:"Given the era, bench/BSI-equivalent module work is more likely", autel:"check", xhorse:"check"},
     note:"Do not confuse GT15 with SIP22 — genuinely different keyways for different Alfa generations." },
-  { make:"Alfa Romeo", model:"Giulietta (2010-2020), MiTo (2008-2018)",
+  { make:"Alfa Romeo", model:"Giulietta (2010-2020), MiTo (2008-2018)", models:["Giulietta","MiTo"],
     blade:"SIP22 (confirmed — Fiat Grande Punto/Bravo-shared platform era)", lishi:"SIP22", lishiOwned:"no",
     add:{method:"Inferred from shared Fiat platform, not independently confirmed for Giulietta/MiTo by name", autel:"partial", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     note:"Blade is confirmed but tool-specific programming success by name wasn't found — treat as 'should work like contemporary Fiat Bravo/Punto' but verify before promising." },
-  { make:"Alfa Romeo", model:"Giulia (2016+), Stelvio (2016+) — 'Giorgio' platform",
+  { make:"Alfa Romeo", model:"Giulia (2016+), Stelvio (2016+) — 'Giorgio' platform", models:["Giulia","Stelvio"],
     blade:"SIP22 (same keyway family continues even on this newer platform)", lishi:"SIP22", lishiOwned:"no",
     add:{method:"check-live-list", autel:"check", xhorse:"check"},
     akl:{method:"Likely Bench/specialist for 2020+ model-year specifically — a dedicated Abrites 'FN022' special function exists because standard tools needed an upgraded solution for AKL/add-key on this generation (also affects Fiat 500X, Jeep Compass/Renegade of that vintage)", autel:"partial", xhorse:"partial"},
     note:"Pre-2020 Giulia/Stelvio may be more tractable with mainstream tools by analogy with pre-2020 Jeep Compass, but not independently confirmed for Alfa itself — worth a follow-up call to Autel/Xhorse support." },
-  { make:"Jeep/Chrysler/Dodge", model:"Renegade (2015+) / Compass (2017+) — Fiat-platform Jeeps",
+  { make:"Jeep/Chrysler/Dodge", model:"Renegade (2015+) / Compass (2017+) — Fiat-platform Jeeps", models:["Renegade","Compass"],
     blade:"SIP22", lishi:"SIP22", lishiOwned:"no",
     add:{method:"OBD, confirmed", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD confirmed for 2018-and-earlier via direct field report (2018 Compass AKL worked by OBD, not the 12+8 adapter, Xhorse-generated key used successfully); downgrade confidence for 2020+ facelifts (see FN022 note under Alfa Giulia/Stelvio above)", autel:"partial", xhorse:"partial"},
     note:"Built on Fiat's Small-Wide platform, sharing electronics with Fiat 500X and, for 2020+ facelifts, Alfa Giulia/Stelvio." },
-  { make:"Jeep/Chrysler/Dodge", model:"Grand Cherokee (WK2, 2011+) / Cherokee (KL, 2014+) — US-derived FCA platform",
+  { make:"Jeep/Chrysler/Dodge", model:"Grand Cherokee (WK2, 2011+) / Cherokee (KL, 2014+) — US-derived FCA platform", models:["Grand Cherokee","Cherokee"],
     blade:"CY24 (existing baseline, not independently re-verified this pass but no contradicting evidence found)", lishi:"CY24", lishiOwned:"yes",
     add:{method:"OBD (2018-and-earlier likely straightforward); an FCA Security/CAN Gateway Module (SGW) from ~2018 onward blocks generic OBD tools without a manufacturer-approved bypass — exact year cutoffs/bypass-cable support not re-confirmed this pass", autel:"partial", xhorse:"partial"},
     akl:{method:"OBD/Bench, dealer-level often needed", autel:"partial", xhorse:"partial"},
     note:"Genuinely different electronics/security lineage from Renegade/Compass — this is the traditional US Jeep/Chrysler platform. Chrysler (300C, Voyager/Grand Voyager) and Dodge (rare UK-market Caliber/Journey/Avenger, or US-import Charger/Challenger/Durango) should be treated identically to this entry for blade/security architecture — very low UK volume, verify blade physically per job." },
 
   // ================= LAND ROVER / JAGUAR / MG / TESLA =================
-  { make:"Land Rover/Jaguar", model:"Older Freelander / pre-2013 Range Rover, Discovery, Defender (classic/Puma-era) / older Jaguar X-Type, S-Type, XJ X350, XK (mechanical/early transponder, no PEPS)",
+  { make:"Land Rover/Jaguar", model:"Older Freelander / pre-2013 Range Rover, Discovery, Defender (classic/Puma-era) / older Jaguar X-Type, S-Type, XJ X350, XK (mechanical/early transponder, no PEPS)", models:["Freelander","Range Rover","Discovery","Defender","X-Type","S-Type","XJ","XK"],
     blade:"HU92 (confirmed for 2005-2009 Discovery 3/Range Rover Sport) / HU101 (older Jaguar saloons, existing baseline)", lishi:"HU92 / HU101", lishiOwned:"yes",
     add:{method:"OBD", autel:"yes", xhorse:"yes"},
     akl:{method:"OBD", autel:"yes", xhorse:"yes"},
     note:"This is the 'easy' bucket — pre-dates KVM/RFA security. Confirmed working, matches prior data." },
-  { make:"Land Rover/Jaguar", model:"Range Rover Evoque Mk1 (2011-2019) — split generation",
+  { make:"Land Rover/Jaguar", model:"Range Rover Evoque Mk1 (2011-2019) — split generation", models:["Range Rover Evoque"],
     blade:"Keyless, no blade (emergency insert code unconfirmed)", lishi:"N/A / unconfirmed", lishiOwned:"no",
     add:{method:"2013: confirmed OBD add & AKL with Autel (Manual Selection → Evoque → 2013 Smart Key). 2017+: Xhorse OBD add-key reported (title only, unverified depth)", autel:"partial", xhorse:"partial"},
     akl:{method:"2013: OBD, confirmed. 2015-2018 KVM-era: Bench (module removal + desolder, see F-Pace procedure below)", autel:"partial", xhorse:"partial"},
     bench:["autel_xp400","xdnp16"],
     note:"Do not assume all Evoque years behave the same — 2013 is meaningfully easier than 2016+. Bench equipment: the F-Pace/XJ procedure below explicitly needs the XP400 Pro (confirmed owned) via an APA106 cable (ownership unconfirmed) — your Xhorse Land Rover KVM adapter (XDNP16) is marketed solder-free but isn't independently confirmed to remove the desolder step for this exact module." },
-  { make:"Land Rover/Jaguar", model:"Discovery Sport (2015+) / Range Rover Velar (2017+) — KVM/RFA generation",
+  { make:"Land Rover/Jaguar", model:"Discovery Sport (2015+) / Range Rover Velar (2017+) — KVM/RFA generation", models:["Discovery Sport","Range Rover Velar"],
     blade:"Keyless, no blade — emergency insert code unconfirmed, verify physically", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Bench (inferred same family as F-Pace/Evoque, not independently sourced for these two specifically)", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench, same inference", autel:"partial", xhorse:"partial"},
     bench:["autel_xp400","xdnp16"],
     note:"Treat as same-family as the confirmed F-Pace/XJ bench procedure below — verify per VIN before quoting. See the F-Pace/XJ entry below for the confirmed procedure and equipment caveat — same applies here by platform inference." },
-  { make:"Land Rover/Jaguar", model:"F-Pace (2016+) / Jaguar XJ facelift X351 (2016-2019) — RFA/KVM module",
+  { make:"Land Rover/Jaguar", model:"F-Pace (2016+) / Jaguar XJ facelift X351 (2016-2019) — RFA/KVM module", models:["F-Pace","XJ"],
     blade:"Keyless, no blade", lishi:"N/A", lishiOwned:"no",
     add:{method:"Confirmed NOT possible via OBD — requires bench: remove RFA/KVM module, desolder crystal+capacitor, MCU to XP400 Pro via APA106 cable, read/write D-Flash+EEPROM", autel:"partial", xhorse:"partial"},
     akl:{method:"Same bench process — confirmed directly for both F-Pace 2018 and XJ 2017", autel:"partial", xhorse:"partial"},
     bench:["autel_xp400","xdnp16"],
     note:"This is the clearest, most concrete evidence in the whole JLR research pass — use as the reference procedure for the whole 2015-2021 JLR family. Confirm your IM508S kit actually includes an XP400 Pro (not guaranteed bundled) before quoting this job at all. You do own the XP400 Pro this procedure calls for — confirmed. The APA106 cable and the exact fit of your Xhorse Land Rover KVM adapter (XDNP16) for this module are not independently confirmed — check both before quoting." },
-  { make:"Land Rover/Jaguar", model:"Range Rover / Range Rover Sport (L405/L494, 2013-2021)",
+  { make:"Land Rover/Jaguar", model:"Range Rover / Range Rover Sport (L405/L494, 2013-2021)", models:["Range Rover","Range Rover Sport"],
     blade:"Keyless, no blade — emergency insert code unconfirmed", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Bench (KVM module removal), same family as F-Pace", autel:"partial", xhorse:"partial"},
     akl:{method:"Bench, same family", autel:"partial", xhorse:"partial"},
     bench:["autel_xp400","xdnp16"],
     note:"Real soldering skill required, budget accordingly — this is not a quick-visit job. Same equipment as the F-Pace/XJ entry above — XP400 Pro confirmed owned, APA106 cable and exact KVM adapter fit unconfirmed." },
-  { make:"Land Rover/Jaguar", model:"Range Rover / Range Rover Sport (L460/L461, 2022+) — Ultra-Wideband (UWB) digital key",
+  { make:"Land Rover/Jaguar", model:"Range Rover / Range Rover Sport (L460/L461, 2022+) — Ultra-Wideband (UWB) digital key", models:["Range Rover","Range Rover Sport"],
     blade:"Keyless, no blade", lishi:"N/A", lishiOwned:"no",
     add:{method:"No confirmed aftermarket path — dealer-only", autel:"no", xhorse:"no"},
     akl:{method:"No confirmed aftermarket path — dealer-only", autel:"no", xhorse:"no"},
     note:"UWB adds a further security layer on top of KVM/BCM. Treat as effectively out of scope for your current toolset — don't quote AKL jobs without further verification." },
-  { make:"Land Rover/Jaguar", model:"Defender (2020+, L663, 'new' Defender) — fully keyless, newest JLR security",
+  { make:"Land Rover/Jaguar", model:"Defender (2020+, L663, 'new' Defender) — fully keyless, newest JLR security", models:["Defender"],
     blade:"Keyless, no blade", lishi:"N/A", lishiOwned:"no",
     add:{method:"⚠ Dealer-only — Land Rover forum users explicitly told this must be done by the dealer or someone with JLR's own proprietary GAP tool; some owners report a security update that blocks adding a second key entirely, even for dealers", autel:"no", xhorse:"no"},
     akl:{method:"Dealer-only", autel:"no", xhorse:"no"},
     note:"⚠ HIGHEST-PRIORITY 'DON'T TAKE THE JOB' FLAG in the whole database — no evidence of any Autel/Xhorse capability found anywhere." },
-  { make:"Land Rover/Jaguar", model:"Jaguar F-Type (2013+) / XE, XF (2015+, X760/X260, KVM/BCM)",
+  { make:"Land Rover/Jaguar", model:"Jaguar F-Type (2013+) / XE, XF (2015+, X760/X260, KVM/BCM)", models:["F-Type","XE","XF"],
     blade:"Keyless, no blade — unconfirmed this pass, presumed same KVM/RFA bucket as F-Pace/XJ by generation", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"check-live-list, verify physically before quoting", autel:"check", xhorse:"check"},
     akl:{method:"check-live-list", autel:"check", xhorse:"check"},
     bench:["autel_xp400","xdnp16"],
     note:"Matches the prior baseline entry for the 2013+ KVM/BCM bucket — strongly supported by the F-Pace/XJ bench-procedure evidence, but not independently re-confirmed for these two models by name." },
-  { make:"Land Rover/Jaguar", model:"⚠ ALL 2022+ JLR (Range Rover/Discovery/Evoque/Velar/Defender, Jaguar E-Pace/F-Pace/I-Pace/F-Type/XF/XE/XJ) — RFA/KVM function gate",
+  { make:"Land Rover/Jaguar", model:"⚠ ALL 2022+ JLR (Range Rover/Discovery/Evoque/Velar/Defender, Jaguar E-Pace/F-Pace/I-Pace/F-Type/XF/XE/XJ) — RFA/KVM function gate", models:["Range Rover","Discovery","Range Rover Evoque","Range Rover Velar","Defender","E-Pace","F-Pace","I-Pace","F-Type","XF","XE","XJ"],
     blade:"n/a — this entry is a standalone tool-gating warning, check the specific model's own entry above for blade/method", lishi:"n/a", lishiOwned:"no",
     add:{method:"⚠ THE PLAIN IM508S IS EXPLICITLY NOT ON AUTEL'S SUPPORTED-TOOL LIST for 2022+ JLR RFA/KVM key programming — only the IM608 Pro II got this function in Autel's own 2024 update notes. Do not promise 2022+ JLR coverage on your IM508S.", autel:"no", xhorse:"check"},
     akl:{method:"Same IM508S exclusion applies", autel:"no", xhorse:"check"},
     note:"A dedicated third-party JLR-only tool vendor (Lock50) markets itself explicitly on the basis that generic programmers like Autel/Xhorse lack JLR's proprietary protocols for 2022+ — Lonsdor's own JLR-IMMO adapter claims ~95% coverage, implying Autel/Xhorse do not reach that level. For 2022+ JLR built after this cutoff, budget realistically as bench-only at best (older sub-generations) or dealer-referral (Defender/UWB/newest models) — see the specific model entries above." },
 
-  { make:"MG", model:"Modern SAIC (MG3 2011+, MG4 EV 2022+, MG5/MG5 EV 2020+, ZS/ZS EV 2017+, HS/HS PHEV 2019+, Marvel R 2021+)",
+  { make:"MG", model:"Modern SAIC (MG3 2011+, MG4 EV 2022+, MG5/MG5 EV 2020+, ZS/ZS EV 2017+, HS/HS PHEV 2019+, Marvel R 2021+)", models:["MG3","MG4","MG5","ZS","HS","Marvel R"],
     blade:"HY20 / KIA9 (confirmed for MG4/MG5/ZS 2016-2023 and Roewe RX3/RX5 — one forum mention loosely called it 'HU100', likely confusion, verify physically before cutting)", lishi:"HY20/KIA9 — not confirmed as an existing Lishi tool number, verify with your supplier before assuming coverage", lishiOwned:"no",
     add:{method:"OBD — 'programming keys through the OBD port using proper protocols, no module removal' per a UK MG specialist. No explicit MG/SAIC mention found in Autel/Xhorse's own product literature — check the live IMMO KEY menu on the unit before promising", autel:"check", xhorse:"check"},
     akl:{method:"OBD per the same specialist (£180, 60 min on-site) — but real-world DIY reports describe using SAIC's own 'SIPS' diagnostic software (with a clone VDI3 interface), not Autel or Xhorse, for some jobs — worth independently testing your tools against a real MG before relying on them", autel:"check", xhorse:"check"},
     note:"⚠ NAMING TRAP — there are two completely unrelated cars both called 'MG ZS': the classic 2001-2005 Rover-era MG ZS (Lucas-brand electronics) and the modern 2017+ SAIC MG ZS SUV (this entry). Key off model year, not just the model name, or you'll apply the wrong blade/procedure." },
-  { make:"MG", model:"Classic Rover-MG era (pre-2005) — MG TF, MG ZR/ZS(2001)/ZT, Rover 75",
+  { make:"MG", model:"Classic Rover-MG era (pre-2005) — MG TF, MG ZR/ZS(2001)/ZT, Rover 75", models:["MG TF","MG ZR","MG ZS","MG ZT","Rover 75"],
     blade:"Unconfirmed — do not assume HU92 despite the PCF7935/'EWS chip' similarity to BMW; blade profile and chip are independent variables", lishi:"Unconfirmed", lishiOwned:"no",
     add:{method:"Likely OBD for the transponder-only pre-2005 cars, inference not sourced", autel:"check", xhorse:"check"},
     akl:{method:"Unconfirmed", autel:"check", xhorse:"check"},
     note:"Rover 75/MG ZT used a PCF7935 transponder — the same chip family BMW used, a holdover from the Rover-BMW ownership era. 20+ years old now — legacy, verify per job, low priority." },
 
-  { make:"Tesla", model:"All models — no aftermarket locksmith angle",
+  { make:"Tesla", model:"All models — no aftermarket locksmith angle", models:["All models"],
     blade:"No blade — no aftermarket key-programming tool applies", lishi:"N/A", lishiOwned:"no",
     add:{method:"Not a locksmith job — owner self-service via touchscreen (Controls→Locks→Keys→Add Key) or the Tesla app while an existing key is present. No OBD key-programming interface exists for this.", autel:"no", xhorse:"no"},
     akl:{method:"If the owner retains ≥1 key card, same self-service route applies. True zero-key AKL needs Tesla account authentication or a Tesla Service Center visit — outside the scope of independent locksmith tools entirely.", autel:"no", xhorse:"no"},
@@ -1458,7 +1464,7 @@ function renderCoverageTable(){
   body.innerHTML = '';
   COVERAGE_ROWS.forEach(({ d, i }) => {
     const tr = document.createElement('tr');
-    tr.dataset.search = (d.make + ' ' + d.model + ' ' + d.add.method + ' ' + d.akl.method).toLowerCase();
+    tr.dataset.search = (d.make + ' ' + d.models.join(' ') + ' ' + d.model + ' ' + d.add.method + ' ' + d.akl.method).toLowerCase();
     const goCell = document.createElement('td');
     const goBtn = document.createElement('button');
     goBtn.type = 'button'; goBtn.className = 'covgo'; goBtn.textContent = 'Check this →';
@@ -1466,6 +1472,7 @@ function renderCoverageTable(){
     goCell.appendChild(goBtn);
     tr.innerHTML =
       '<td class="covmake">' + d.make + '</td>' +
+      '<td class="covmodel">' + d.models.join(', ') + '</td>' +
       '<td class="covmodel">' + d.model + '</td>' +
       '<td>' + d.add.method + (d.add.method !== d.akl.method ? ' / ' + d.akl.method + ' (AKL)' : '') + '</td>' +
       '<td>' + covChip(d.add.autel) + '</td>' +
@@ -1499,16 +1506,21 @@ const coverageSearchInput = document.getElementById('coverageSearch');
 if(coverageSearchInput) coverageSearchInput.addEventListener('input', filterCoverageTable);
 renderCoverageTable();
 
-// ---------------- UI wiring: Make / Model / Year dropdowns ----------------
+// ---------------- UI wiring: Make / Model / Generation / Year dropdowns ----------------
 // Plain native <select> dropdowns — click to open, pick from the list, same as the
-// Autel/Xhorse vehicle-selection screens. Make -> Model is a straightforward cascade
-// (pick a make, its models populate). Year is optional and never removes anything from
-// the Model list — it just reorders it so matching-year models sort to the top, since
-// a few DB entries bundle several sub-models under one row with a shared year span and
-// hard-filtering could hide the very entry you're after.
+// Autel/Xhorse vehicle-selection screens. Make -> Model -> Generation is a three-level
+// cascade: Model is the actual nameplate (3 Series, Golf, Corsa...), Generation is the
+// specific chassis/security-system era each DB entry represents (e.g. "CAS1/CAS2 (E46,
+// E39... ~2000-2008)"). Every DB entry carries a `models` array of the nameplate(s) it
+// covers, since several entries share one procedure across more than one nameplate.
+// Year is optional and never removes anything from the Generation list — it just
+// reorders it so matching-year generations sort to the top, since a few DB entries
+// bundle several years/chassis into one generation and hard-filtering could hide the
+// very entry you're after.
 const makes = [...new Set(DB.map(d => d.make))].sort((a, b) => a.localeCompare(b));
 const makeSelect = document.getElementById('makeSelect');
 const modelSelect = document.getElementById('modelSelect');
+const generationSelect = document.getElementById('generationSelect');
 const yearSelect = document.getElementById('yearSelect');
 
 makes.forEach(m => {
@@ -1527,45 +1539,72 @@ function yearMatches(i, year){
 
 function refreshModelSelect(){
   const selMake = makeSelect.value;
-  const selYear = yearSelect.value ? parseInt(yearSelect.value, 10) : null;
-  const forMake = DB_SORTED.filter(i => !selMake || DB[i].make === selMake);
   const prevValue = modelSelect.value;
   modelSelect.innerHTML = '';
-  if(!forMake.length){
+  if(!selMake){
     modelSelect.innerHTML = '<option value="">Select make first…</option>';
     return;
   }
-  modelSelect.innerHTML = '<option value="">Select model/generation…</option>';
-  let ordered = forMake;
+  const nameplates = [...new Set(
+    DB_SORTED.filter(i => DB[i].make === selMake).flatMap(i => DB[i].models)
+  )].sort((a, b) => a.localeCompare(b));
+  modelSelect.innerHTML = '<option value="">Select model…</option>';
+  nameplates.forEach(n => {
+    const o = document.createElement('option'); o.value = n; o.textContent = n; modelSelect.appendChild(o);
+  });
+  if(prevValue && nameplates.includes(prevValue)) modelSelect.value = prevValue;
+}
+
+function refreshGenerationSelect(){
+  const selMake = makeSelect.value;
+  const selModel = modelSelect.value;
+  const selYear = yearSelect.value ? parseInt(yearSelect.value, 10) : null;
+  const prevValue = generationSelect.value;
+  generationSelect.innerHTML = '';
+  if(!selMake || !selModel){
+    generationSelect.innerHTML = '<option value="">Select model first…</option>';
+    return;
+  }
+  const forModel = DB_SORTED.filter(i => DB[i].make === selMake && DB[i].models.includes(selModel));
+  if(!forModel.length){
+    generationSelect.innerHTML = '<option value="">No generations found…</option>';
+    return;
+  }
+  generationSelect.innerHTML = '<option value="">Select generation…</option>';
+  let ordered = forModel;
   if(selYear !== null){
-    const matching = forMake.filter(i => yearMatches(i, selYear));
-    const rest = forMake.filter(i => !yearMatches(i, selYear));
+    const matching = forModel.filter(i => yearMatches(i, selYear));
+    const rest = forModel.filter(i => !yearMatches(i, selYear));
     ordered = matching.concat(rest);
   }
   ordered.forEach(i => {
     const o = document.createElement('option');
     o.value = String(i);
     o.textContent = DB[i].model;
-    modelSelect.appendChild(o);
+    generationSelect.appendChild(o);
   });
-  // Keep the current model selected (just possibly reordered) rather than resetting it
-  // when only Year changes — Year is a sort hint, not a filter, so nothing should be lost.
-  if(prevValue && forMake.includes(Number(prevValue))) modelSelect.value = prevValue;
+  // Keep the current generation selected (just possibly reordered) rather than resetting
+  // it when only Year changes — Year is a sort hint, not a filter, so nothing is lost.
+  if(prevValue && forModel.includes(Number(prevValue))) generationSelect.value = prevValue;
 }
 
-makeSelect.addEventListener('change', refreshModelSelect);
-yearSelect.addEventListener('change', refreshModelSelect);
+makeSelect.addEventListener('change', () => { refreshModelSelect(); refreshGenerationSelect(); });
+modelSelect.addEventListener('change', refreshGenerationSelect);
+yearSelect.addEventListener('change', refreshGenerationSelect);
 
 function selectVehicle(dbIndex){
   const entry = DB[dbIndex];
   makeSelect.value = entry.make;
-  // Year is left exactly as the user had it — it only reorders the Model list, so there's
-  // nothing here for it to conflict with.
   refreshModelSelect();
-  modelSelect.value = String(dbIndex);
+  // Prefer keeping the currently-picked nameplate if this entry also covers it, otherwise
+  // default to the entry's first nameplate.
+  modelSelect.value = (entry.models.includes(modelSelect.value) ? modelSelect.value : entry.models[0]);
+  refreshGenerationSelect();
+  generationSelect.value = String(dbIndex);
 }
 
 refreshModelSelect();
+refreshGenerationSelect();
 
 function covChip(cov){
   const map = { yes:['Yes — supported','yes'], partial:['Partial — verify','partial'], no:['No — not covered','no'], check:['Check live list','check'] };
@@ -1579,14 +1618,14 @@ function stockLine(label, ok, detail){
 }
 
 function runCheck(){
-  const idx = modelSelect.value;
-  if(idx === ''){ alert('Pick a make and model first.'); return; }
+  const idx = generationSelect.value;
+  if(idx === ''){ alert('Pick a make, model and generation first.'); return; }
   const entry = DB[idx];
   const jobtype = document.getElementById('jobtype').value;
   const j = jobtype === 'akl' ? entry.akl : entry.add;
   const reg = document.getElementById('reg').value.trim().toUpperCase();
 
-  document.getElementById('vehicleTitle').textContent = (reg ? reg + ' — ' : '') + entry.make + ' — ' + entry.model;
+  document.getElementById('vehicleTitle').textContent = (reg ? reg + ' — ' : '') + entry.make + ' — ' + (modelSelect.value || entry.models[0]) + ' — ' + entry.model;
   document.getElementById('platformNote').textContent = (jobtype === 'akl' ? 'All keys lost' : 'Add a spare key') + ' · ' + entry.note;
   document.getElementById('method').innerHTML = `<b>${j.method}</b>`;
   document.getElementById('blade').textContent = entry.blade;
