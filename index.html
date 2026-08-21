@@ -144,18 +144,15 @@
     <div class="grid4">
       <div class="field">
         <label>Make</label>
-        <input type="text" id="makeInput" list="makeList" placeholder="Type or pick a make…" autocomplete="off">
-        <datalist id="makeList"></datalist>
-      </div>
-      <div class="field">
-        <label>Year (optional)</label>
-        <input type="text" id="yearInput" list="yearList" placeholder="Narrow by year…" autocomplete="off" inputmode="numeric">
-        <datalist id="yearList"></datalist>
+        <select id="makeSelect"><option value="">Select make…</option></select>
       </div>
       <div class="field">
         <label>Model / generation</label>
-        <input type="text" id="modelInput" list="modelList" placeholder="Type or pick a model…" autocomplete="off">
-        <datalist id="modelList"></datalist>
+        <select id="modelSelect"><option value="">Select make first…</option></select>
+      </div>
+      <div class="field">
+        <label>Year (optional)</label>
+        <select id="yearSelect"><option value="">Any year</option></select>
       </div>
       <div class="field">
         <label>Job type</label>
@@ -165,7 +162,7 @@
         </select>
       </div>
     </div>
-    <p class="hint" style="margin-top:-8px;">Search-as-you-type on Make and Model, same idea as scrolling/searching your Autel or Xhorse vehicle menus. Every model for the make you pick is always in the list — Year (pulled from the generation text already in each Model entry) just sorts likely matches to the top, it never hides anything, since some entries bundle a few sub-models with different year spans and a hidden row would mean you couldn't find the right one.</p>
+    <p class="hint" style="margin-top:-8px;">Pick Make, then Model, same as scrolling your Autel or Xhorse vehicle menus. Year is optional — pick it to bring the model(s) from that year to the top of the list, without hiding anything else, since a few entries bundle several sub-models with different year spans.</p>
     <button class="btn" id="checkBtn" onclick="runCheck()">Check this job</button>
   </div>
 
@@ -1502,141 +1499,73 @@ const coverageSearchInput = document.getElementById('coverageSearch');
 if(coverageSearchInput) coverageSearchInput.addEventListener('input', filterCoverageTable);
 renderCoverageTable();
 
-// ---------------- UI wiring: Make / Year / Model search-as-you-type ----------------
-// Three plain text inputs backed by <datalist> (native browser autocomplete — the same
-// "type to filter a long vehicle list" feel as the Autel/Xhorse tool screens), kept in
-// sync with plain JS state rather than a <select>'s .value so Make, Year and Model can
-// filter each other. Year narrows Model; picking a Model backfills Make (and clears Year
-// if it no longer fits) so searching by model name alone still works.
+// ---------------- UI wiring: Make / Model / Year dropdowns ----------------
+// Plain native <select> dropdowns — click to open, pick from the list, same as the
+// Autel/Xhorse vehicle-selection screens. Make -> Model is a straightforward cascade
+// (pick a make, its models populate). Year is optional and never removes anything from
+// the Model list — it just reorders it so matching-year models sort to the top, since
+// a few DB entries bundle several sub-models under one row with a shared year span and
+// hard-filtering could hide the very entry you're after.
 const makes = [...new Set(DB.map(d => d.make))].sort((a, b) => a.localeCompare(b));
-const makesLower = new Map(makes.map(m => [m.toLowerCase(), m]));
-const makeInput = document.getElementById('makeInput');
-const yearInput = document.getElementById('yearInput');
-const modelInput = document.getElementById('modelInput');
-const makeList = document.getElementById('makeList');
-const yearListEl = document.getElementById('yearList');
-const modelList = document.getElementById('modelList');
+const makeSelect = document.getElementById('makeSelect');
+const modelSelect = document.getElementById('modelSelect');
+const yearSelect = document.getElementById('yearSelect');
 
-let selectedMake = '';
-let selectedYear = null; // integer or null
-let selectedIndex = '';  // DB index (number) or '' when nothing resolved yet
+makes.forEach(m => {
+  const o = document.createElement('option'); o.value = m; o.textContent = m; makeSelect.appendChild(o);
+});
+for(let y = DB_YEAR_BOUNDS.min; y <= DB_YEAR_BOUNDS.max; y++){
+  const o = document.createElement('option'); o.value = String(y); o.textContent = String(y); yearSelect.appendChild(o);
+}
 
 function yearMatches(i, year){
   if(year === null) return true;
   const r = DB_YEARS[i];
-  if(!r) return true; // no year info on this entry — don't exclude it, just can't narrow by it
+  if(!r) return true; // no year info on this entry — don't exclude it, just can't sort by it
   return year >= r.min && year <= r.max;
 }
 
-// Make is a precise filter (a DB entry either is or isn't that make) — Year is a derived,
-// approximate value, so it must never remove a model from the list, only push likely
-// matches to the top. Hiding an entry because our extracted year range was slightly off
-// would make the right vehicle impossible to select — worse than not filtering at all.
-function modelCandidateIndices(){
-  const forMake = DB_SORTED.filter(i => !selectedMake || DB[i].make === selectedMake);
-  if(selectedYear === null) return forMake;
-  const matching = forMake.filter(i => yearMatches(i, selectedYear));
-  const rest = forMake.filter(i => !yearMatches(i, selectedYear));
-  return matching.concat(rest);
-}
-
-function fillDatalist(el, values){
-  el.innerHTML = '';
-  values.forEach(v => {
-    const o = document.createElement('option');
-    o.value = v;
-    el.appendChild(o);
-  });
-}
-
-function refreshMakeList(){
-  // Every make is always selectable — Year only reorders the Model list once a make is
-  // picked (see modelCandidateIndices), it never removes a make or model from the list.
-  fillDatalist(makeList, makes);
-}
-
-function refreshYearList(){
-  let lo = DB_YEAR_BOUNDS.min, hi = DB_YEAR_BOUNDS.max;
-  if(selectedMake){
-    const ranges = DB_SORTED.filter(i => DB[i].make === selectedMake).map(i => DB_YEARS[i]).filter(Boolean);
-    if(ranges.length){
-      lo = Math.min(...ranges.map(r => r.min));
-      hi = Math.max(...ranges.map(r => r.max));
-    }
+function refreshModelSelect(){
+  const selMake = makeSelect.value;
+  const selYear = yearSelect.value ? parseInt(yearSelect.value, 10) : null;
+  const forMake = DB_SORTED.filter(i => !selMake || DB[i].make === selMake);
+  const prevValue = modelSelect.value;
+  modelSelect.innerHTML = '';
+  if(!forMake.length){
+    modelSelect.innerHTML = '<option value="">Select make first…</option>';
+    return;
   }
-  const years = [];
-  for(let y = lo; y <= hi; y++) years.push(String(y));
-  fillDatalist(yearListEl, years);
+  modelSelect.innerHTML = '<option value="">Select model/generation…</option>';
+  let ordered = forMake;
+  if(selYear !== null){
+    const matching = forMake.filter(i => yearMatches(i, selYear));
+    const rest = forMake.filter(i => !yearMatches(i, selYear));
+    ordered = matching.concat(rest);
+  }
+  ordered.forEach(i => {
+    const o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = DB[i].model;
+    modelSelect.appendChild(o);
+  });
+  // Keep the current model selected (just possibly reordered) rather than resetting it
+  // when only Year changes — Year is a sort hint, not a filter, so nothing should be lost.
+  if(prevValue && forMake.includes(Number(prevValue))) modelSelect.value = prevValue;
 }
 
-function refreshModelList(){
-  const candidates = modelCandidateIndices();
-  fillDatalist(modelList, candidates.map(i => DB[i].model));
-  modelInput.placeholder = selectedMake ? 'Type or pick a model…' : 'Type a model, or pick a make first…';
-}
+makeSelect.addEventListener('change', refreshModelSelect);
+yearSelect.addEventListener('change', refreshModelSelect);
 
 function selectVehicle(dbIndex){
   const entry = DB[dbIndex];
-  selectedMake = entry.make;
-  selectedIndex = dbIndex;
-  makeInput.value = entry.make;
-  modelInput.value = entry.model;
-  // Year is left exactly as the user had it — it's just a sort hint on the Model list
-  // now, never an exclusion filter, so there's nothing here for it to conflict with.
-  refreshMakeList();
-  refreshYearList();
-  refreshModelList();
+  makeSelect.value = entry.make;
+  // Year is left exactly as the user had it — it only reorders the Model list, so there's
+  // nothing here for it to conflict with.
+  refreshModelSelect();
+  modelSelect.value = String(dbIndex);
 }
 
-makeInput.addEventListener('input', () => {
-  const typed = makeInput.value.trim();
-  const matched = makesLower.get(typed.toLowerCase());
-  const newMake = matched || '';
-  if(newMake !== selectedMake){
-    selectedMake = newMake;
-    if(selectedIndex !== '' && DB[selectedIndex].make !== selectedMake){
-      selectedIndex = '';
-      modelInput.value = '';
-    }
-    refreshYearList();
-    refreshModelList();
-  }
-});
-
-yearInput.addEventListener('input', () => {
-  const typed = yearInput.value.trim();
-  const n = parseInt(typed, 10);
-  const valid = typed !== '' && String(n) === typed && n >= 1900 && n <= YEAR_OPEN_END_CAP;
-  const newYear = valid ? n : null;
-  if(newYear !== selectedYear){
-    selectedYear = newYear;
-    // Year only reorders the Model list (see modelCandidateIndices) — it never excludes
-    // anything, so a Model already picked stays picked even if the typed Year doesn't
-    // match its range.
-    refreshModelList();
-  }
-});
-
-modelInput.addEventListener('input', () => {
-  const typed = modelInput.value.trim().toLowerCase();
-  const candidates = modelCandidateIndices();
-  const match = candidates.find(i => DB[i].model.toLowerCase() === typed);
-  if(match !== undefined){
-    selectedIndex = match;
-    if(DB[match].make !== selectedMake){
-      selectedMake = DB[match].make;
-      makeInput.value = DB[match].make;
-      refreshYearList();
-      refreshModelList();
-    }
-  } else {
-    selectedIndex = '';
-  }
-});
-
-fillDatalist(makeList, makes);
-refreshYearList();
-refreshModelList();
+refreshModelSelect();
 
 function covChip(cov){
   const map = { yes:['Yes — supported','yes'], partial:['Partial — verify','partial'], no:['No — not covered','no'], check:['Check live list','check'] };
@@ -1650,8 +1579,8 @@ function stockLine(label, ok, detail){
 }
 
 function runCheck(){
-  const idx = selectedIndex;
-  if(idx === ''){ alert('Pick a make and model first — type to search, then choose a match from the list.'); return; }
+  const idx = modelSelect.value;
+  if(idx === ''){ alert('Pick a make and model first.'); return; }
   const entry = DB[idx];
   const jobtype = document.getElementById('jobtype').value;
   const j = jobtype === 'akl' ? entry.akl : entry.add;
